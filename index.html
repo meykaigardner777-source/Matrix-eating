@@ -1,0 +1,1157 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="oled" data-accent="cyan">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#000000">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <title>OmniMacro — Precision Telemetry</title>
+
+  <!-- PWA Manifest -->
+  <link rel="manifest" href='data:application/manifest+json;charset=utf-8,{
+    "name": "OmniMacro System",
+    "short_name": "OmniMacro",
+    "start_url": ".",
+    "display": "standalone",
+    "background_color": "#000000",
+    "theme_color": "#000000"
+  }'>
+
+  <style>
+    /* ==========================================================================
+       TECHNICAL MINIMALIST DESIGN SYSTEM (OLED HUD)
+       ========================================================================== */
+    :root {
+      --font-mono: "SF Mono", "JetBrains Mono", "Roboto Mono", Menlo, Consolas, monospace;
+      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+      --bg: #000000;
+      --panel: #09090b;
+      --panel-hover: #111115;
+      --surface: #121215;
+      --border: #1e1e24;
+      --border-bright: #2e2e38;
+      --text: #f4f4f5;
+      --text-muted: #71717a;
+      --text-dim: #3f3f46;
+      --accent: #00f0ff;
+      --accent-muted: rgba(0, 240, 255, 0.12);
+      --protein: #38bdf8;
+      --carb: #f59e0b;
+      --fat: #fb7185;
+      --danger: #ef4444;
+      --success: #10b981;
+      --radius: 3px;
+    }
+
+    [data-theme="obsidian"] {
+      --bg: #08090a;
+      --panel: #0d0f12;
+      --panel-hover: #14171c;
+      --border: #1e2229;
+      --border-bright: #2d333d;
+    }
+
+    [data-theme="studio-light"] {
+      --bg: #f4f4f5;
+      --panel: #ffffff;
+      --panel-hover: #fafafa;
+      --surface: #f4f4f5;
+      --border: #e4e4e7;
+      --border-bright: #d4d4d8;
+      --text: #09090b;
+      --text-muted: #71717a;
+      --text-dim: #a1a1aa;
+      --accent-muted: rgba(0, 240, 255, 0.08);
+    }
+
+    [data-accent="cyan"]    { --accent: #00f0ff; --accent-muted: rgba(0, 240, 255, 0.12); }
+    [data-accent="emerald"] { --accent: #10b981; --accent-muted: rgba(16, 185, 129, 0.12); }
+    [data-accent="amber"]   { --accent: #f59e0b; --accent-muted: rgba(245, 158, 11, 0.12); }
+    [data-accent="white"]   { --accent: #f4f4f5; --accent-muted: rgba(255, 255, 255, 0.12); }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: var(--font-sans); -webkit-tap-highlight-color: transparent; }
+    body { background-color: var(--bg); color: var(--text); padding-bottom: 74px; min-height: 100vh; overflow-x: hidden; }
+
+    .app-shell { max-width: 580px; margin: 0 auto; padding: 14px 14px 24px; }
+
+    /* Telemetry Navigation Header */
+    .telemetry-header {
+      display: flex; justify-content: space-between; align-items: flex-end;
+      padding: 10px 0 14px; border-bottom: 1px solid var(--border); margin-bottom: 14px;
+    }
+    .system-title { font-family: var(--font-mono); font-size: 0.82rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text); }
+    .system-status { font-family: var(--font-mono); font-size: 0.65rem; color: var(--text-muted); display: flex; align-items: center; gap: 6px; }
+    .status-dot { width: 6px; height: 6px; background: var(--accent); border-radius: 50%; box-shadow: 0 0 8px var(--accent); }
+
+    /* Precision Panels */
+    .hud-panel {
+      background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 14px; margin-bottom: 12px; position: relative;
+    }
+    .hud-panel-title {
+      font-family: var(--font-mono); font-size: 0.68rem; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: 10px; display: flex;
+      justify-content: space-between; align-items: center;
+    }
+
+    /* Buttons & Inputs */
+    .btn {
+      background: var(--surface); color: var(--text); border: 1px solid var(--border-bright);
+      font-family: var(--font-mono); font-size: 0.72rem; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.05em; padding: 8px 12px; border-radius: var(--radius); cursor: pointer;
+      display: inline-flex; align-items: center; justify-content: center; gap: 6px; transition: border-color 0.15s, background 0.15s;
+    }
+    .btn:hover { background: var(--panel-hover); border-color: var(--accent); }
+    .btn:active { transform: translateY(1px); }
+    .btn-accent { background: var(--accent); color: #000; border-color: var(--accent); font-weight: 700; }
+    .btn-accent:hover { background: #fff; border-color: #fff; }
+    .btn-full { width: 100%; }
+
+    input, select {
+      width: 100%; background: var(--bg); border: 1px solid var(--border);
+      color: var(--text); padding: 8px 10px; border-radius: var(--radius); font-size: 0.8rem;
+      font-family: var(--font-mono); outline: none; transition: border-color 0.15s;
+    }
+    input:focus, select:focus { border-color: var(--accent); }
+
+    /* Dashboard Telemetry Layout */
+    .metric-hero { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; }
+    .metric-value-large { font-family: var(--font-mono); font-size: 2rem; font-weight: 700; letter-spacing: -0.04em; }
+    .metric-target-sub { font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-muted); }
+
+    .segmented-macro-bar {
+      width: 100%; height: 5px; background: var(--surface); border: 1px solid var(--border);
+      display: flex; gap: 1px; margin-bottom: 14px;
+    }
+    .segment-fill { height: 100%; transition: width 0.3s ease; }
+
+    .macro-grid-matrix { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+    .macro-cell {
+      background: var(--bg); border: 1px solid var(--border); padding: 8px 10px; border-radius: var(--radius);
+    }
+    .macro-cell-header {
+      font-family: var(--font-mono); font-size: 0.65rem; font-weight: 700; text-transform: uppercase;
+      display: flex; justify-content: space-between; margin-bottom: 4px;
+    }
+    .macro-cell-val { font-family: var(--font-mono); font-size: 1.05rem; font-weight: 700; }
+    .macro-cell-sub { font-family: var(--font-mono); font-size: 0.62rem; color: var(--text-muted); margin-top: 2px; }
+
+    /* High Precision Chart Canvas & HUD */
+    .chart-container-node { position: relative; width: 100%; height: 230px; margin-top: 8px; }
+    #interactiveTrendCanvas { width: 100%; height: 100%; display: block; }
+    
+    .chart-scrubber-hud {
+      display: flex; justify-content: space-between; align-items: center; background: var(--bg);
+      border: 1px solid var(--border); padding: 8px 10px; font-family: var(--font-mono);
+      font-size: 0.7rem; border-radius: var(--radius); margin-bottom: 8px; min-height: 34px;
+    }
+    .chart-metric-nav { display: flex; gap: 4px; }
+    .chart-filter-chip {
+      background: var(--bg); border: 1px solid var(--border); color: var(--text-muted);
+      font-family: var(--font-mono); font-size: 0.62rem; font-weight: 700; text-transform: uppercase;
+      padding: 4px 8px; border-radius: var(--radius); cursor: pointer;
+    }
+    .chart-filter-chip.active { color: var(--text); border-color: var(--accent); background: var(--accent-muted); }
+
+    /* Quick Cloud Fast Access Row */
+    .fast-access-strip { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
+    .fast-access-strip::-webkit-scrollbar { display: none; }
+    .chain-chip {
+      background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 6px 10px; font-family: var(--font-mono); font-size: 0.68rem; font-weight: 600;
+      white-space: nowrap; cursor: pointer; text-transform: uppercase; color: var(--text-muted);
+    }
+    .chain-chip:hover { border-color: var(--text-muted); color: var(--text); }
+
+    /* Feed Items */
+    .telemetry-row {
+      display: flex; justify-content: space-between; align-items: center; padding: 9px 10px;
+      background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius);
+      margin-bottom: 6px; font-size: 0.8rem;
+    }
+    .telemetry-row:hover { border-color: var(--border-bright); }
+    .tag-mono {
+      font-family: var(--font-mono); font-size: 0.65rem; padding: 2px 5px;
+      border: 1px solid var(--border); border-radius: var(--radius); color: var(--text-muted);
+    }
+
+    /* Minimal Bottom Dock */
+    .minimal-dock {
+      position: fixed; bottom: 0; left: 0; right: 0; height: 54px;
+      background: var(--bg); border-top: 1px solid var(--border); display: flex;
+      justify-content: center; z-index: 1000;
+    }
+    .dock-inner { max-width: 580px; width: 100%; display: flex; }
+    .dock-item {
+      flex: 1; background: none; border: none; color: var(--text-dim); font-family: var(--font-mono);
+      font-size: 0.68rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
+      cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;
+      transition: color 0.15s, border-top 0.15s; border-top: 2px solid transparent;
+    }
+    .dock-item.active { color: var(--text); border-top-color: var(--accent); background: var(--panel); }
+
+    .view-page { display: none; }
+    .view-page.active { display: block; }
+  </style>
+</head>
+<body>
+
+  <div class="app-shell">
+    <!-- Header -->
+    <header class="telemetry-header">
+      <div>
+        <div class="system-title">OmniMacro // System</div>
+        <div class="system-status"><span class="status-dot"></span> <span id="sys-mode-label">LOCAL LEDGER SYNCED</span></div>
+      </div>
+      <div id="date-readout" style="font-family:var(--font-mono); font-size:0.68rem; color:var(--text-muted);"></div>
+    </header>
+
+    <!-- =======================================================================
+         VIEW 1: METRIC DASHBOARD
+         ======================================================================= -->
+    <section id="tab-dashboard" class="view-page active">
+      <!-- High-Precision Telemetry Fuel Matrix -->
+      <div class="hud-panel">
+        <div class="hud-panel-title">
+          <span>Fuel Matrix</span>
+          <span id="calorie-delta-tag" class="tag-mono" style="color:var(--accent);">STANDBY</span>
+        </div>
+
+        <div class="metric-hero">
+          <div>
+            <span class="metric-value-large" id="hero-cal-current">0</span>
+            <span class="metric-target-sub" id="hero-cal-goal">/ 2,200 KCAL</span>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-family:var(--font-mono); font-size:0.85rem; font-weight:700;" id="hero-cal-remain">2,200</div>
+            <div style="font-family:var(--font-mono); font-size:0.6rem; color:var(--text-muted);">REMAINING</div>
+          </div>
+        </div>
+
+        <!-- Segmented Energy Split Bar (P / C / F) -->
+        <div class="segmented-macro-bar">
+          <div id="seg-fill-pro" class="segment-fill" style="background:var(--protein); width:0%;"></div>
+          <div id="seg-fill-carb" class="segment-fill" style="background:var(--carb); width:0%;"></div>
+          <div id="seg-fill-fat" class="segment-fill" style="background:var(--fat); width:0%;"></div>
+        </div>
+
+        <!-- 3-Column Macro Metric Array -->
+        <div class="macro-grid-matrix">
+          <div class="macro-cell">
+            <div class="macro-cell-header"><span style="color:var(--protein);">PRO</span><span id="pct-pro">0%</span></div>
+            <div class="macro-cell-val" id="val-pro">0<span style="font-size:0.65rem; color:var(--text-muted);">g</span></div>
+            <div class="macro-cell-sub" id="cal-pro">0 kcal (4/g)</div>
+          </div>
+          <div class="macro-cell">
+            <div class="macro-cell-header"><span style="color:var(--carb);">CHO</span><span id="pct-carb">0%</span></div>
+            <div class="macro-cell-val" id="val-carb">0<span style="font-size:0.65rem; color:var(--text-muted);">g</span></div>
+            <div class="macro-cell-sub" id="cal-carb">0 kcal (4/g)</div>
+          </div>
+          <div class="macro-cell">
+            <div class="macro-cell-header"><span style="color:var(--fat);">FAT</span><span id="pct-fat">0%</span></div>
+            <div class="macro-cell-val" id="val-fat">0<span style="font-size:0.65rem; color:var(--text-muted);">g</span></div>
+            <div class="macro-cell-sub" id="cal-fat">0 kcal (9/g)</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Live Dynamic Chain Indexing Strip -->
+      <div class="hud-panel" style="padding: 10px 14px;">
+        <div class="hud-panel-title" style="margin-bottom:6px;">Direct Cloud Connect</div>
+        <div class="fast-access-strip">
+          <div class="chain-chip" onclick="openDirectBrand('McDonald\'s', 'burger')">McDonald's</div>
+          <div class="chain-chip" onclick="openDirectBrand('Chick-fil-A', 'chicken')">Chick-fil-A</div>
+          <div class="chain-chip" onclick="openDirectBrand('Chipotle', 'bowl')">Chipotle</div>
+          <div class="chain-chip" onclick="openDirectBrand('Subway', 'sandwich')">Subway</div>
+          <div class="chain-chip" onclick="openDirectBrand('Taco Bell', 'taco')">Taco Bell</div>
+          <div class="chain-chip" onclick="openDirectBrand('Starbucks', 'coffee')">Starbucks</div>
+        </div>
+      </div>
+
+      <!-- High-Resolution Timeline & Interactive Cursor Scrubber -->
+      <div class="hud-panel">
+        <div class="hud-panel-title">
+          <span>Telemetry Trendline</span>
+          <div class="chart-metric-nav">
+            <button class="chart-filter-chip active" onclick="setChartMetric('cal', this)">Kcal</button>
+            <button class="chart-filter-chip" onclick="setChartMetric('pro', this)">Pro</button>
+            <button class="chart-filter-chip" onclick="setChartMetric('carb', this)">Cho</button>
+            <button class="chart-filter-chip" onclick="setChartMetric('fat', this)">Fat</button>
+          </div>
+        </div>
+
+        <!-- Live Cursor Readout HUD -->
+        <div class="chart-scrubber-hud" id="chart-scrubber-hud">
+          <span id="hud-point-date">Hover/Touch Graph for Daily Scrub</span>
+          <span id="hud-point-stats" style="color:var(--accent);">--</span>
+        </div>
+
+        <div class="chart-container-node">
+          <canvas id="interactiveTrendCanvas"></canvas>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; margin-top:8px; font-family:var(--font-mono); font-size:0.65rem; color:var(--text-muted);">
+          <span id="chart-range-label">WINDOW: 14 DAYS</span>
+          <span id="chart-avg-indicator">AVG: 0 KCAL/D</span>
+        </div>
+      </div>
+
+      <!-- Daily Intake Chrono Log -->
+      <div class="hud-panel">
+        <div class="hud-panel-title">
+          <span>Intake Feed // Today</span>
+          <button class="btn" style="padding: 2px 6px; font-size: 0.62rem;" onclick="clearDayIntake()">Clear</button>
+        </div>
+        <div id="chrono-log-list"></div>
+      </div>
+    </section>
+
+    <!-- =======================================================================
+         VIEW 2: RADAR & VENUE SCANNER
+         ======================================================================= -->
+    <section id="tab-radar" class="view-page">
+      <div class="hud-panel">
+        <div class="hud-panel-title">
+          <span>Location Sensor</span>
+          <span id="radar-sensor-state" class="tag-mono">READY</span>
+        </div>
+
+        <button class="btn btn-accent btn-full" onclick="initiateRadarScan()">
+          Scan Geolocation Perimeter
+        </button>
+
+        <div style="display: flex; gap: 6px; margin-top: 8px;">
+          <input type="text" id="manual-query-input" placeholder="Query City or Coordinates..." onkeydown="if(event.key==='Enter') searchCityDirect()">
+          <button class="btn" onclick="searchCityDirect()">Search</button>
+        </div>
+
+        <div id="radar-feedback" style="display:none; font-family:var(--font-mono); font-size:0.7rem; color:var(--accent); margin-top:10px;"></div>
+        <div id="radar-results-list" style="margin-top: 10px;"></div>
+      </div>
+
+      <!-- Cloud Menu Stream -->
+      <div class="hud-panel" id="venue-feed-panel" style="display: none;">
+        <div class="hud-panel-title">
+          <div>
+            <span id="venue-feed-name" style="color:var(--text); font-weight:700;">Venue</span>
+            <div id="venue-feed-sub" style="font-size:0.62rem; color:var(--text-muted); margin-top:2px;">DIRECT QUERY</div>
+          </div>
+          <button class="btn" style="font-size:0.62rem; padding: 4px 8px;" onclick="promptManualDish()">+ Custom Item</button>
+        </div>
+
+        <input type="text" id="venue-filter-input" placeholder="Filter dish or beverage..." onkeydown="if(event.key==='Enter') fetchCloudMenu(this.value)">
+
+        <div id="menu-fetch-status" style="display:none; font-family:var(--font-mono); font-size:0.7rem; color:var(--accent); margin-top:8px;"></div>
+        <div id="venue-menu-items" style="margin-top: 10px; max-height: 420px; overflow-y: auto;"></div>
+      </div>
+    </section>
+
+    <!-- =======================================================================
+         VIEW 3: CONTROL & CALIBRATION (SETTINGS)
+         ======================================================================= -->
+    <section id="tab-settings" class="view-page">
+      <!-- Target Configuration -->
+      <div class="hud-panel">
+        <div class="hud-panel-title">Daily Intake Calibration</div>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
+          <div><label class="tag-mono">Target Energy (kcal)</label><input type="number" id="cfg-goal-cal" onchange="syncCalibration()"></div>
+          <div><label class="tag-mono">Protein Goal (g)</label><input type="number" id="cfg-goal-pro" onchange="syncCalibration()"></div>
+          <div><label class="tag-mono">Carb Goal (g)</label><input type="number" id="cfg-goal-carb" onchange="syncCalibration()"></div>
+          <div><label class="tag-mono">Fat Goal (g)</label><input type="number" id="cfg-goal-fat" onchange="syncCalibration()"></div>
+        </div>
+
+        <div class="hud-panel-title" style="margin-top: 14px; margin-bottom: 6px;">Macro Preset Calculations</div>
+        <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:6px;">
+          <button class="btn" onclick="applyMacroPreset('high-protein')">High Pro</button>
+          <button class="btn" onclick="applyMacroPreset('balanced')">Balanced</button>
+          <button class="btn" onclick="applyMacroPreset('keto')">Keto</button>
+        </div>
+      </div>
+
+      <!-- Telemetry Visual Controls -->
+      <div class="hud-panel">
+        <div class="hud-panel-title">Telemetry Visualizer</div>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
+          <div>
+            <label class="tag-mono">Base Theme</label>
+            <select id="cfg-theme" onchange="setSystemTheme(this.value)">
+              <option value="oled">OLED Pitch Black</option>
+              <option value="obsidian">Obsidian Slate</option>
+              <option value="studio-light">Studio Light</option>
+            </select>
+          </div>
+          <div>
+            <label class="tag-mono">Accent Hue</label>
+            <select id="cfg-accent" onchange="setSystemAccent(this.value)">
+              <option value="cyan">Electric Cyan</option>
+              <option value="emerald">Matrix Emerald</option>
+              <option value="amber">Industrial Amber</option>
+              <option value="white">Pure White</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="margin-top: 10px;">
+          <label class="tag-mono">Timeline Window</label>
+          <select id="cfg-timeline-window" onchange="setTimeWindow(this.value)">
+            <option value="7">7 Days</option>
+            <option value="14" selected>14 Days</option>
+            <option value="30">30 Days</option>
+          </select>
+        </div>
+
+        <div style="margin-top: 10px;">
+          <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+            <label class="tag-mono">Radar Perimeter Radius</label>
+            <span id="range-val-label" class="tag-mono">1,500m</span>
+          </div>
+          <input type="range" id="cfg-radar-radius" min="500" max="8000" step="250" value="1500" oninput="updateRangeRadius(this.value)">
+        </div>
+      </div>
+
+      <!-- Ledger Management & Export -->
+      <div class="hud-panel">
+        <div class="hud-panel-title">Ledger Database & Backup</div>
+        <div style="display:flex; flex-direction:column; gap:6px;">
+          <button class="btn" onclick="exportLedgerJSON()">Export Ledger (JSON)</button>
+          <button class="btn" onclick="document.getElementById('import-file-elem').click()">Import Ledger (JSON)</button>
+          <input type="file" id="import-file-elem" style="display:none;" accept=".json" onchange="importLedgerJSON(event)">
+          <button class="btn" onclick="seedSampleRealisticData()">Load 14-Day Simulation Data</button>
+          <button class="btn" style="color:var(--danger); border-color:rgba(239,68,68,0.25);" onclick="executeHardReset()">Purge Entire Local Database</button>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- Minimal Bottom Dock -->
+  <nav class="minimal-dock">
+    <div class="dock-inner">
+      <button class="dock-item active" onclick="switchNav('dashboard', this)">Telemetry</button>
+      <button class="dock-item" onclick="switchNav('radar', this)">Radar</button>
+      <button class="dock-item" onclick="switchNav('settings', this)">Settings</button>
+    </div>
+  </nav>
+
+  <!-- =======================================================================
+       JAVASCRIPT ARCHITECTURE
+       ======================================================================= -->
+  <script>
+    // System State & Keys
+    const STORAGE_KEY_GOALS = 'omni_sys_goals_v2';
+    const STORAGE_KEY_HISTORY = 'omni_sys_ledger_v2';
+    const STORAGE_KEY_THEME = 'omni_sys_theme_v2';
+    const STORAGE_KEY_ACCENT = 'omni_sys_accent_v2';
+    const STORAGE_KEY_WINDOW = 'omni_sys_window_v2';
+    const STORAGE_KEY_RADIUS = 'omni_sys_radius_v2';
+
+    let targets = JSON.parse(localStorage.getItem(STORAGE_KEY_GOALS) || JSON.stringify({
+      cal: 2200, pro: 160, carb: 220, fat: 65
+    }));
+
+    // Historical ledger: mapped by YYYY-MM-DD
+    let historyLedger = JSON.parse(localStorage.getItem(STORAGE_KEY_HISTORY) || "{}");
+    let chartDays = parseInt(localStorage.getItem(STORAGE_KEY_WINDOW) || "14");
+    let searchRadius = parseInt(localStorage.getItem(STORAGE_KEY_RADIUS) || "1500");
+    let activeMetric = 'cal';
+
+    function getTodayString() {
+      return new Date().toISOString().split('T')[0];
+    }
+
+    function ensureTodayEntry() {
+      const today = getTodayString();
+      if (!historyLedger[today]) {
+        historyLedger[today] = { cal: 0, pro: 0, carb: 0, fat: 0, logs: [] };
+      }
+      return historyLedger[today];
+    }
+
+    // =========================================================================
+    // NAVIGATION CONTROLLER
+    // =========================================================================
+    function switchNav(viewId, triggerElem) {
+      document.querySelectorAll('.view-page').forEach(v => v.classList.remove('active'));
+      document.querySelectorAll('.dock-item').forEach(d => d.classList.remove('active'));
+      document.getElementById(`tab-${viewId}`).classList.add('active');
+      triggerElem.classList.add('active');
+
+      if (viewId === 'dashboard') {
+        renderHighPrecisionChart();
+      }
+    }
+
+    // =========================================================================
+    // TELEMETRY HUD & DASHBOARD MATRIX
+    // =========================================================================
+    function updateTelemetryMatrix() {
+      const today = ensureTodayEntry();
+
+      // Energy
+      const currentCal = today.cal;
+      const targetCal = targets.cal;
+      const remainingCal = targetCal - currentCal;
+
+      document.getElementById('hero-cal-current').textContent = currentCal.toLocaleString();
+      document.getElementById('hero-cal-goal').textContent = `/ ${targetCal.toLocaleString()} KCAL`;
+      
+      const remainElem = document.getElementById('hero-cal-remain');
+      const deltaTag = document.getElementById('calorie-delta-tag');
+
+      remainElem.textContent = Math.abs(remainingCal).toLocaleString();
+      if (remainingCal >= 0) {
+        deltaTag.textContent = `${remainingCal} KCAL REMAINING`;
+        deltaTag.style.color = 'var(--accent)';
+      } else {
+        deltaTag.textContent = `${Math.abs(remainingCal)} KCAL SURPLUS`;
+        deltaTag.style.color = 'var(--danger)';
+      }
+
+      // Energy Multipliers: P = 4 kcal/g, C = 4 kcal/g, F = 9 kcal/g
+      const calFromPro = today.pro * 4;
+      const calFromCarb = today.carb * 4;
+      const calFromFat = today.fat * 9;
+      const totalDerivedKcal = calFromPro + calFromCarb + calFromFat || 1;
+
+      // Segmented Split Bar
+      document.getElementById('seg-fill-pro').style.width = `${(calFromPro / totalDerivedKcal) * 100}%`;
+      document.getElementById('seg-fill-carb').style.width = `${(calFromCarb / totalDerivedKcal) * 100}%`;
+      document.getElementById('seg-fill-fat').style.width = `${(calFromFat / totalDerivedKcal) * 100}%`;
+
+      // Matrix Cells
+      document.getElementById('val-pro').innerHTML = `${today.pro}<span style="font-size:0.65rem; color:var(--text-muted);">g</span>`;
+      document.getElementById('pct-pro').textContent = `${Math.round((today.pro / (targets.pro || 1)) * 100)}%`;
+      document.getElementById('cal-pro').textContent = `${calFromPro} kcal (${Math.round((calFromPro/totalDerivedKcal)*100)}%)`;
+
+      document.getElementById('val-carb').innerHTML = `${today.carb}<span style="font-size:0.65rem; color:var(--text-muted);">g</span>`;
+      document.getElementById('pct-carb').textContent = `${Math.round((today.carb / (targets.carb || 1)) * 100)}%`;
+      document.getElementById('cal-carb').textContent = `${calFromCarb} kcal (${Math.round((calFromCarb/totalDerivedKcal)*100)}%)`;
+
+      document.getElementById('val-fat').innerHTML = `${today.fat}<span style="font-size:0.65rem; color:var(--text-muted);">g</span>`;
+      document.getElementById('pct-fat').textContent = `${Math.round((today.fat / (targets.fat || 1)) * 100)}%`;
+      document.getElementById('cal-fat').textContent = `${calFromFat} kcal (${Math.round((calFromFat/totalDerivedKcal)*100)}%)`;
+
+      renderChronoLogs();
+      renderHighPrecisionChart();
+    }
+
+    function renderChronoLogs() {
+      const today = ensureTodayEntry();
+      const list = document.getElementById('chrono-log-list');
+
+      if (!today.logs || today.logs.length === 0) {
+        list.innerHTML = `<div style="font-family:var(--font-mono); font-size:0.7rem; color:var(--text-muted); padding:10px 0;">NO ENTRIES RECORDED TODAY</div>`;
+        return;
+      }
+
+      list.innerHTML = today.logs.map((item, idx) => `
+        <div class="telemetry-row">
+          <div>
+            <div style="font-weight:700;">${item.name}</div>
+            <div style="font-family:var(--font-mono); font-size:0.65rem; color:var(--text-muted); margin-top:2px;">
+              ${item.cal} KCAL | P:${item.pro}g C:${item.carb}g F:${item.fat}g
+            </div>
+          </div>
+          <button style="background:none; border:none; color:var(--text-dim); cursor:pointer; font-family:var(--font-mono); font-size:0.9rem;" onclick="removeIntakeItem(${idx})">✕</button>
+        </div>
+      `).reverse().join('');
+    }
+
+    function addIntakeEntry(item) {
+      const today = ensureTodayEntry();
+      today.logs.push(item);
+      today.cal += item.cal;
+      today.pro += item.pro;
+      today.carb += item.carb;
+      today.fat += item.fat;
+
+      localStorage.setItem(STORAGE_KEY_HISTORY, JSON.stringify(historyLedger));
+      updateTelemetryMatrix();
+    }
+
+    function removeIntakeItem(index) {
+      const today = ensureTodayEntry();
+      const actualIndex = today.logs.length - 1 - index;
+      const item = today.logs[actualIndex];
+      if (!item) return;
+
+      today.cal = Math.max(0, today.cal - item.cal);
+      today.pro = Math.max(0, today.pro - item.pro);
+      today.carb = Math.max(0, today.carb - item.carb);
+      today.fat = Math.max(0, today.fat - item.fat);
+      today.logs.splice(actualIndex, 1);
+
+      localStorage.setItem(STORAGE_KEY_HISTORY, JSON.stringify(historyLedger));
+      updateTelemetryMatrix();
+    }
+
+    function clearDayIntake() {
+      if (!confirm("Flush all entries for today?")) return;
+      const todayStr = getTodayString();
+      historyLedger[todayStr] = { cal: 0, pro: 0, carb: 0, fat: 0, logs: [] };
+      localStorage.setItem(STORAGE_KEY_HISTORY, JSON.stringify(historyLedger));
+      updateTelemetryMatrix();
+    }
+
+    // =========================================================================
+    // HIGH-RESOLUTION ACCURATE CHART ENGINE WITH CURSOR SCRUBBER
+    // =========================================================================
+    let cachedChartDataset = [];
+
+    function setChartMetric(metric, btnElem) {
+      activeMetric = metric;
+      document.querySelectorAll('.chart-filter-chip').forEach(c => c.classList.remove('active'));
+      btnElem.classList.add('active');
+      renderHighPrecisionChart();
+    }
+
+    function getTimelineSeries(numDays) {
+      const series = [];
+      const now = new Date();
+      for (let i = numDays - 1; i >= 0; i--) {
+        const d = new Date(now);
+        d.setDate(d.getDate() - i);
+        const dateStr = d.toISOString().split('T')[0];
+        const record = historyLedger[dateStr] || { cal: 0, pro: 0, carb: 0, fat: 0 };
+        series.push({
+          date: dateStr,
+          label: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+          cal: record.cal || 0,
+          pro: record.pro || 0,
+          carb: record.carb || 0,
+          fat: record.fat || 0
+        });
+      }
+      return series;
+    }
+
+    function renderHighPrecisionChart(scrubIndex = -1) {
+      const canvas = document.getElementById('interactiveTrendCanvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const rect = canvas.parentElement.getBoundingClientRect();
+
+      // High DPI retina normalization
+      const dpr = window.devicePixelRatio || 2;
+      canvas.width = Math.floor(rect.width * dpr);
+      canvas.height = Math.floor(rect.height * dpr);
+      ctx.scale(dpr, dpr);
+
+      const w = rect.width;
+      const h = rect.height;
+      ctx.clearRect(0, 0, w, h);
+
+      cachedChartDataset = getTimelineSeries(chartDays);
+      const dataset = cachedChartDataset;
+      const values = dataset.map(d => d[activeMetric]);
+
+      // Calculate Target & Maximum Scale
+      const targetVal = targets[activeMetric] || 100;
+      const maxValue = Math.max(...values, targetVal) * 1.25 || 100;
+
+      // Calculate Rolling Window Average
+      const recordedDays = dataset.filter(d => d[activeMetric] > 0);
+      const avg = recordedDays.length ? Math.round(dataset.reduce((acc, c) => acc + c[activeMetric], 0) / dataset.length) : 0;
+      const unit = activeMetric === 'cal' ? 'KCAL' : 'G';
+      document.getElementById('chart-avg-indicator').textContent = `WINDOW AVG: ${avg} ${unit}/D`;
+      document.getElementById('chart-range-label').textContent = `WINDOW: ${chartDays} DAYS`;
+
+      // Geometry coordinates
+      const padLeft = 8;
+      const padRight = 8;
+      const padBottom = 20;
+      const padTop = 15;
+      const plotW = w - padLeft - padRight;
+      const plotH = h - padTop - padBottom;
+
+      const stepX = plotW / (dataset.length - 1);
+      const points = dataset.map((d, i) => {
+        const val = d[activeMetric];
+        // Accurate coordinate mapping: zero = flatline on zero baseline
+        const y = padTop + plotH - (val / maxValue) * plotH;
+        return { x: padLeft + i * stepX, y, val, date: d.label, fullDate: d.date };
+      });
+
+      // Target Guideline (Dashed Technical Line)
+      const targetY = padTop + plotH - (targetVal / maxValue) * plotH;
+      ctx.save();
+      ctx.strokeStyle = '#27272a';
+      ctx.lineWidth = 1;
+      ctx.setLineDash([3, 3]);
+      ctx.beginPath();
+      ctx.moveTo(padLeft, targetY);
+      ctx.lineTo(w - padRight, targetY);
+      ctx.stroke();
+      ctx.restore();
+
+      // Flat zero baseline
+      ctx.strokeStyle = '#18181b';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(padLeft, padTop + plotH);
+      ctx.lineTo(w - padRight, padTop + plotH);
+      ctx.stroke();
+
+      // Metric Line Colors
+      const metricColors = {
+        cal: '#00f0ff',
+        pro: '#38bdf8',
+        carb: '#f59e0b',
+        fat: '#fb7185'
+      };
+      const strokeColor = metricColors[activeMetric] || '#00f0ff';
+
+      // Draw Precision Area Fill
+      const areaGrad = ctx.createLinearGradient(0, padTop, 0, padTop + plotH);
+      areaGrad.addColorStop(0, strokeColor + '28');
+      areaGrad.addColorStop(1, strokeColor + '00');
+
+      ctx.beginPath();
+      ctx.moveTo(points[0].x, padTop + plotH);
+      points.forEach(pt => ctx.lineTo(pt.x, pt.y));
+      ctx.lineTo(points[points.length - 1].x, padTop + plotH);
+      ctx.closePath();
+      ctx.fillStyle = areaGrad;
+      ctx.fill();
+
+      // Draw Main Crisp Plot Line
+      ctx.beginPath();
+      points.forEach((pt, i) => {
+        if (i === 0) ctx.moveTo(pt.x, pt.y);
+        else ctx.lineTo(pt.x, pt.y);
+      });
+      ctx.strokeStyle = strokeColor;
+      ctx.lineWidth = 1.75;
+      ctx.stroke();
+
+      // X-Axis Date Identifiers
+      ctx.fillStyle = '#52525b';
+      ctx.font = `9px var(--font-mono)`;
+      ctx.textAlign = 'center';
+      const stride = chartDays > 14 ? 5 : 2;
+      points.forEach((pt, idx) => {
+        if (idx % stride === 0 || idx === points.length - 1) {
+          ctx.fillText(pt.date, pt.x, h - 4);
+        }
+      });
+
+      // Interactive Scrubbing Crosshair & Pinpoint
+      if (scrubIndex >= 0 && scrubIndex < points.length) {
+        const activePt = points[scrubIndex];
+
+        // Vertical Hairline
+        ctx.strokeStyle = '#a1a1aa';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(activePt.x, padTop);
+        ctx.lineTo(activePt.x, padTop + plotH);
+        ctx.stroke();
+
+        // Highlighting Pip
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(activePt.x, activePt.y, 4, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = strokeColor;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // Update HUD Element Above Canvas
+        const delta = activePt.val - targetVal;
+        const deltaSign = delta > 0 ? `+${delta}` : `${delta}`;
+        document.getElementById('hud-point-date').textContent = `${activePt.fullDate} (${activePt.date})`;
+        document.getElementById('hud-point-stats').innerHTML = `
+          <span>${activePt.val} ${unit}</span>
+          <span style="color:${delta >= 0 ? 'var(--accent)' : 'var(--text-muted)'}; margin-left:6px;">(${deltaSign} vs target)</span>
+        `;
+      }
+    }
+
+    // Chart Mouse & Touch Scrubber Attachments
+    const chartCanvas = document.getElementById('interactiveTrendCanvas');
+    function handlePointerScrub(e) {
+      if (!cachedChartDataset.length) return;
+      const rect = chartCanvas.getBoundingClientRect();
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const normX = Math.max(0, Math.min(clientX - rect.left, rect.width));
+      const step = rect.width / (cachedChartDataset.length - 1);
+      const index = Math.round(normX / step);
+      renderHighPrecisionChart(index);
+    }
+
+    chartCanvas.addEventListener('mousemove', handlePointerScrub);
+    chartCanvas.addEventListener('touchstart', handlePointerScrub, { passive: true });
+    chartCanvas.addEventListener('touchmove', handlePointerScrub, { passive: true });
+    chartCanvas.addEventListener('mouseleave', () => {
+      renderHighPrecisionChart(-1);
+      document.getElementById('hud-point-date').textContent = 'Hover/Touch Graph for Daily Scrub';
+      document.getElementById('hud-point-stats').textContent = '--';
+    });
+
+    // =========================================================================
+    // HIGH-RELIABILITY LOCATION & RESTAURANT RADAR ENGINE
+    // =========================================================================
+    async function acquireReliableCoordinates() {
+      // 1. Try GPS with a 3500ms timeout
+      const hardwareGPS = new Promise((resolve) => {
+        if (!navigator.geolocation || location.protocol === 'file:') return resolve(null);
+        navigator.geolocation.getCurrentPosition(
+          (pos) => resolve({ lat: pos.coords.latitude, lon: pos.coords.longitude, source: "HARDWARE GPS" }),
+          () => resolve(null),
+          { timeout: 3500, enableHighAccuracy: true }
+        );
+      });
+
+      const gpsResult = await hardwareGPS;
+      if (gpsResult) return gpsResult;
+
+      // 2. Reliable IP fallback via ipwho.is (CORS free & fast)
+      try {
+        const res = await fetch('https://ipwho.is/');
+        const data = await res.json();
+        if (data && data.success !== false) {
+          return { lat: data.latitude, lon: data.longitude, source: `${data.city || 'IP Network'} (FALLBACK)` };
+        }
+      } catch (e) {}
+
+      // 3. Absolute failsafe fallback to New York coordinates
+      return { lat: 40.7128, lon: -74.0060, source: "NEW YORK (DEFAULT)" };
+    }
+
+    async function initiateRadarScan() {
+      const stateTag = document.getElementById('radar-sensor-state');
+      const feedback = document.getElementById('radar-feedback');
+      const resultsBox = document.getElementById('radar-results-list');
+
+      feedback.style.display = 'block';
+      resultsBox.innerHTML = '';
+      stateTag.textContent = 'SCANNING';
+      feedback.textContent = '[1/2] Resolving position telemetry...';
+
+      const coords = await acquireReliableCoordinates();
+      stateTag.textContent = 'LOCKED';
+      feedback.textContent = `[2/2] Scanning ${searchRadius}m perimeter for dining nodes (${coords.source})...`;
+
+      try {
+        // High-efficiency Overpass query
+        const query = `[out:json][timeout:10];(node["amenity"~"restaurant|fast_food|cafe"](around:${searchRadius},${coords.lat},${coords.lon}););out center 30;`;
+        const resp = await fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`);
+        if (!resp.ok) throw new Error("Overpass Throttled");
+        const json = await resp.json();
+
+        const venues = (json.elements || [])
+          .filter(e => e.tags && e.tags.name)
+          .map(e => ({ name: e.tags.name, cuisine: e.tags.cuisine || e.tags.amenity || 'Dining' }));
+
+        renderScannedVenues(dedupeVenues(venues));
+      } catch (err) {
+        feedback.textContent = 'Overpass node throttled. Utilizing instant Nominatim failover...';
+        queryNominatimFallback(coords.lat, coords.lon);
+      }
+    }
+
+    async function queryNominatimFallback(lat, lon) {
+      try {
+        const url = `https://nominatim.openstreetmap.org/search?format=json&q=food+near+${lat},${lon}&limit=20`;
+        const res = await fetch(url);
+        const data = await res.json();
+        const venues = data.map(d => ({ name: d.display_name.split(',')[0], cuisine: 'Dining' }));
+        renderScannedVenues(dedupeVenues(venues));
+      } catch (e) {
+        document.getElementById('radar-feedback').textContent = 'Location scanning failed. Use manual city search box.';
+      }
+    }
+
+    async function searchCityDirect() {
+      const q = document.getElementById('manual-query-input').value.trim();
+      if (!q) return;
+      const feedback = document.getElementById('radar-feedback');
+      feedback.style.display = 'block';
+      feedback.textContent = `Querying OpenStreetMap global directory for "${q}"...`;
+
+      try {
+        const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=restaurants+in+${encodeURIComponent(q)}&limit=25`);
+        const data = await res.json();
+        renderScannedVenues(data.map(d => ({ name: d.display_name.split(',')[0], cuisine: 'Dining' })));
+      } catch (e) {
+        feedback.textContent = 'Query failed.';
+      }
+    }
+
+    function dedupeVenues(arr) {
+      const seen = new Set();
+      const out = [];
+      arr.forEach(v => {
+        const clean = v.name.replace(/#\d+/g, '').trim().toLowerCase();
+        if (!seen.has(clean)) { seen.add(clean); out.push(v); }
+      });
+      return out;
+    }
+
+    function renderScannedVenues(venues) {
+      const feedback = document.getElementById('radar-feedback');
+      const box = document.getElementById('radar-results-list');
+      feedback.style.display = 'none';
+      box.innerHTML = '';
+
+      if (!venues.length) {
+        box.innerHTML = `<div style="font-family:var(--font-mono); font-size:0.75rem; color:var(--text-muted); padding:10px;">NO VENUES DISCOVERED WITHIN PERIMETER</div>`;
+        return;
+      }
+
+      venues.forEach(v => {
+        const row = document.createElement('div');
+        row.className = 'telemetry-row';
+        row.style.cursor = 'pointer';
+        row.innerHTML = `
+          <div>
+            <div style="font-weight:700;">${v.name}</div>
+            <div style="font-family:var(--font-mono); font-size:0.62rem; color:var(--text-muted); text-transform:uppercase;">${v.cuisine}</div>
+          </div>
+          <span style="font-family:var(--font-mono); font-size:0.75rem; color:var(--accent);">QUERY →</span>
+        `;
+        row.onclick = () => selectVenueToInspect(v.name, v.cuisine);
+        box.appendChild(row);
+      });
+    }
+
+    // =========================================================================
+    // CLOUD MENU & OPEN FOOD FACTS ENGINE
+    // =========================================================================
+    function openDirectBrand(brand, keyword) {
+      switchNav('radar', document.querySelectorAll('.dock-item')[1]);
+      selectVenueToInspect(brand, keyword);
+    }
+
+    function selectVenueToInspect(name, fallbackTerm) {
+      const panel = document.getElementById('venue-feed-panel');
+      panel.style.display = 'block';
+      document.getElementById('venue-feed-name').textContent = name;
+      document.getElementById('venue-feed-sub').textContent = `LIVE CLOUD STREAM // ${fallbackTerm.toUpperCase()}`;
+      panel.scrollIntoView({ behavior: 'smooth' });
+      fetchCloudMenu(name, fallbackTerm);
+    }
+
+    async function fetchCloudMenu(query, fallback) {
+      if (!query) return;
+      const status = document.getElementById('menu-fetch-status');
+      const box = document.getElementById('venue-menu-items');
+      status.style.display = 'block';
+      status.textContent = `Streaming nutritional payload for "${query}"...`;
+      box.innerHTML = '';
+
+      try {
+        const clean = query.replace(/['’]/g, '').trim();
+        const url = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(clean)}&search_simple=1&action=process&json=1&page_size=30&fields=product_name,nutriments`;
+        const res = await fetch(url);
+        const data = await res.json();
+
+        let dishes = (data.products || []).map(p => parseOpenFoodFactsPayload(p)).filter(Boolean);
+
+        if (dishes.length === 0 && fallback) {
+          status.textContent = `No brand items. Pulling dishes matching "${fallback}"...`;
+          const fbRes = await fetch(`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(fallback)}&search_simple=1&action=process&json=1&page_size=20&fields=product_name,nutriments`);
+          const fbData = await fbRes.json();
+          dishes = (fbData.products || []).map(p => parseOpenFoodFactsPayload(p)).filter(Boolean);
+        }
+
+        status.style.display = 'none';
+
+        if (!dishes.length) {
+          box.innerHTML = `<div style="font-family:var(--font-mono); font-size:0.75rem; color:var(--text-muted); padding:10px;">NO NUTRITIONAL DATA FOUND. USE "+ CUSTOM ITEM".</div>`;
+          return;
+        }
+
+        box.innerHTML = dishes.map(dish => `
+          <div class="telemetry-row">
+            <div style="flex:1; padding-right:8px;">
+              <div style="font-weight:700;">${dish.name}</div>
+              <div style="font-family:var(--font-mono); font-size:0.65rem; color:var(--text-muted); margin-top:2px;">
+                <span style="color:var(--accent);">${dish.cal} KCAL</span> | P:${dish.pro}g C:${dish.carb}g F:${dish.fat}g
+              </div>
+            </div>
+            <button class="btn btn-accent" style="padding:4px 8px; font-size:0.65rem;" onclick='addIntakeEntry(${JSON.stringify(dish)})'>+ LOG</button>
+          </div>
+        `).join('');
+      } catch (err) {
+        status.textContent = 'Cloud network lookup failed.';
+      }
+    }
+
+    function parseOpenFoodFactsPayload(item) {
+      if (!item.product_name) return null;
+      const n = item.nutriments || {};
+      const cal = Math.round(n['energy-kcal_serving'] || n['energy-kcal_100g'] || (n['energy_100g'] ? n['energy_100g'] / 4.184 : 0));
+      if (!cal || isNaN(cal)) return null;
+
+      return {
+        name: item.product_name,
+        cal: cal,
+        pro: Math.round(n.proteins_serving || n.proteins_100g || 0),
+        carb: Math.round(n.carbohydrates_serving || n.carbohydrates_100g || 0),
+        fat: Math.round(n.fat_serving || n.fat_100g || 0)
+      };
+    }
+
+    function promptManualDish() {
+      const name = prompt("Dish Designation:");
+      if (!name) return;
+      const cal = parseInt(prompt("Calories (kcal):") || "0");
+      const pro = parseInt(prompt("Protein (g):") || "0");
+      const carb = parseInt(prompt("Carbohydrates (g):") || "0");
+      const fat = parseInt(prompt("Fat (g):") || "0");
+      addIntakeEntry({ name: `${name} (Custom)`, cal, pro, carb, fat });
+    }
+
+    // =========================================================================
+    // CALIBRATION & SYSTEM CONFIGURATION
+    // =========================================================================
+    function syncCalibration() {
+      targets.cal = parseInt(document.getElementById('cfg-goal-cal').value) || 2000;
+      targets.pro = parseInt(document.getElementById('cfg-goal-pro').value) || 150;
+      targets.carb = parseInt(document.getElementById('cfg-goal-carb').value) || 200;
+      targets.fat = parseInt(document.getElementById('cfg-goal-fat').value) || 60;
+
+      localStorage.setItem(STORAGE_KEY_GOALS, JSON.stringify(targets));
+      updateTelemetryMatrix();
+    }
+
+    function applyMacroPreset(preset) {
+      const kcal = targets.cal;
+      if (preset === 'high-protein') {
+        // 40% Pro, 40% Carb, 20% Fat
+        targets.pro = Math.round((kcal * 0.40) / 4);
+        targets.carb = Math.round((kcal * 0.40) / 4);
+        targets.fat = Math.round((kcal * 0.20) / 9);
+      } else if (preset === 'balanced') {
+        // 30% Pro, 45% Carb, 25% Fat
+        targets.pro = Math.round((kcal * 0.30) / 4);
+        targets.carb = Math.round((kcal * 0.45) / 4);
+        targets.fat = Math.round((kcal * 0.25) / 9);
+      } else if (preset === 'keto') {
+        // 25% Pro, 5% Carb, 70% Fat
+        targets.pro = Math.round((kcal * 0.25) / 4);
+        targets.carb = Math.round((kcal * 0.05) / 4);
+        targets.fat = Math.round((kcal * 0.70) / 9);
+      }
+
+      document.getElementById('cfg-goal-pro').value = targets.pro;
+      document.getElementById('cfg-goal-carb').value = targets.carb;
+      document.getElementById('cfg-goal-fat').value = targets.fat;
+      localStorage.setItem(STORAGE_KEY_GOALS, JSON.stringify(targets));
+      updateTelemetryMatrix();
+    }
+
+    function setSystemTheme(theme) {
+      document.documentElement.setAttribute('data-theme', theme);
+      localStorage.setItem(STORAGE_KEY_THEME, theme);
+      renderHighPrecisionChart();
+    }
+
+    function setSystemAccent(accent) {
+      document.documentElement.setAttribute('data-accent', accent);
+      localStorage.setItem(STORAGE_KEY_ACCENT, accent);
+      renderHighPrecisionChart();
+    }
+
+    function setTimeWindow(days) {
+      chartDays = parseInt(days);
+      localStorage.setItem(STORAGE_KEY_WINDOW, chartDays);
+      renderHighPrecisionChart();
+    }
+
+    function updateRangeRadius(val) {
+      searchRadius = parseInt(val);
+      localStorage.setItem(STORAGE_KEY_RADIUS, searchRadius);
+      document.getElementById('range-val-label').textContent = `${searchRadius.toLocaleString()}m`;
+    }
+
+    function exportLedgerJSON() {
+      const blob = new Blob([JSON.stringify(historyLedger, null, 2)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `omnimacro-ledger-${getTodayString()}.json`;
+      a.click();
+    }
+
+    function importLedgerJSON(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const parsed = JSON.parse(e.target.result);
+          historyLedger = parsed;
+          localStorage.setItem(STORAGE_KEY_HISTORY, JSON.stringify(historyLedger));
+          updateTelemetryMatrix();
+          alert("Ledger successfully imported.");
+        } catch (err) {
+          alert("Invalid JSON ledger file.");
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function seedSampleRealisticData() {
+      if (!confirm("Populate last 14 days with simulated nutritional records?")) return;
+      const now = new Date();
+      for (let i = 13; i >= 1; i--) {
+        const d = new Date(now);
+        d.setDate(d.getDate() - i);
+        const ds = d.toISOString().split('T')[0];
+        // Introduce realistic variance (some zero days, some hit targets)
+        const isSkipped = i === 4 || i === 9; // Unlogged days become flat zero lines
+        historyLedger[ds] = isSkipped ? { cal: 0, pro: 0, carb: 0, fat: 0, logs: [] } : {
+          cal: Math.round(1950 + (Math.random() * 450)),
+          pro: Math.round(140 + (Math.random() * 35)),
+          carb: Math.round(190 + (Math.random() * 50)),
+          fat: Math.round(55 + (Math.random() * 20)),
+          logs: [{ name: "Simulated Intake Record", cal: 2100, pro: 155, carb: 200, fat: 65 }]
+        };
+      }
+      localStorage.setItem(STORAGE_KEY_HISTORY, JSON.stringify(historyLedger));
+      updateTelemetryMatrix();
+    }
+
+    function executeHardReset() {
+      if (confirm("WARNING: All historical data, targets, and logs will be permanently deleted.")) {
+        localStorage.clear();
+        location.reload();
+      }
+    }
+
+    // =========================================================================
+    // SYSTEM INITIALIZATION
+    // =========================================================================
+    window.addEventListener('DOMContentLoaded', () => {
+      // Date readout
+      document.getElementById('date-readout').textContent = new Date().toLocaleDateString('en-US', {
+        weekday: 'short', month: 'short', day: 'numeric'
+      }).toUpperCase();
+
+      // Restore configuration
+      const savedTheme = localStorage.getItem(STORAGE_KEY_THEME) || 'oled';
+      const savedAccent = localStorage.getItem(STORAGE_KEY_ACCENT) || 'cyan';
+      document.documentElement.setAttribute('data-theme', savedTheme);
+      document.documentElement.setAttribute('data-accent', savedAccent);
+
+      document.getElementById('cfg-theme').value = savedTheme;
+      document.getElementById('cfg-accent').value = savedAccent;
+      document.getElementById('cfg-timeline-window').value = chartDays;
+      document.getElementById('cfg-radar-radius').value = searchRadius;
+      document.getElementById('range-val-label').textContent = `${searchRadius.toLocaleString()}m`;
+
+      document.getElementById('cfg-goal-cal').value = targets.cal;
+      document.getElementById('cfg-goal-pro').value = targets.pro;
+      document.getElementById('cfg-goal-carb').value = targets.carb;
+      document.getElementById('cfg-goal-fat').value = targets.fat;
+
+      updateTelemetryMatrix();
+
+      window.addEventListener('resize', () => {
+        renderHighPrecisionChart();
+      });
+    });
+  </script>
+</body>
+</html>
