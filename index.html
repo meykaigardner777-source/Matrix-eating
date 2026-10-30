@@ -2,35 +2,31 @@
 <html lang="en" data-theme="oled" data-accent="cyan">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="theme-color" content="#000000">
+  
+  <!-- Apple iOS Standalone Settings -->
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <title>OmniMacro — Precision Telemetry</title>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="OmniMacro">
+  <link rel="apple-touch-icon" href="icon.svg">
 
-  <!-- PWA Manifest -->
-  <link rel="manifest" href='data:application/manifest+json;charset=utf-8,{
-    "name": "OmniMacro System",
-    "short_name": "OmniMacro",
-    "start_url": ".",
-    "display": "standalone",
-    "background_color": "#000000",
-    "theme_color": "#000000"
-  }'>
+  <!-- PWA Manifest & Favicon -->
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/svg+xml" href="icon.svg">
+
+  <title>OmniMacro — Telemetry</title>
 
   <style>
-    /* ==========================================================================
-       TECHNICAL MINIMALIST DESIGN SYSTEM (OLED HUD)
-       ========================================================================== */
     :root {
-      --font-mono: "SF Mono", "JetBrains Mono", "Roboto Mono", Menlo, Consolas, monospace;
-      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+      --font-mono: "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       --bg: #000000;
       --panel: #09090b;
-      --panel-hover: #111115;
-      --surface: #121215;
+      --panel-hover: #121215;
+      --surface: #141418;
       --border: #1e1e24;
-      --border-bright: #2e2e38;
+      --border-bright: #2d2d38;
       --text: #f4f4f5;
       --text-muted: #71717a;
       --text-dim: #3f3f46;
@@ -40,14 +36,12 @@
       --carb: #f59e0b;
       --fat: #fb7185;
       --danger: #ef4444;
-      --success: #10b981;
       --radius: 3px;
     }
 
     [data-theme="obsidian"] {
       --bg: #08090a;
       --panel: #0d0f12;
-      --panel-hover: #14171c;
       --border: #1e2229;
       --border-bright: #2d333d;
     }
@@ -71,23 +65,26 @@
     [data-accent="white"]   { --accent: #f4f4f5; --accent-muted: rgba(255, 255, 255, 0.12); }
 
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: var(--font-sans); -webkit-tap-highlight-color: transparent; }
-    body { background-color: var(--bg); color: var(--text); padding-bottom: 74px; min-height: 100vh; overflow-x: hidden; }
+    body {
+      background-color: var(--bg); color: var(--text);
+      padding-top: env(safe-area-inset-top);
+      padding-bottom: calc(68px + env(safe-area-inset-bottom));
+      min-height: 100vh; overflow-x: hidden;
+    }
 
-    .app-shell { max-width: 580px; margin: 0 auto; padding: 14px 14px 24px; }
+    .app-shell { max-width: 580px; margin: 0 auto; padding: 12px 14px 20px; }
 
-    /* Telemetry Navigation Header */
     .telemetry-header {
       display: flex; justify-content: space-between; align-items: flex-end;
-      padding: 10px 0 14px; border-bottom: 1px solid var(--border); margin-bottom: 14px;
+      padding: 10px 0 12px; border-bottom: 1px solid var(--border); margin-bottom: 12px;
     }
-    .system-title { font-family: var(--font-mono); font-size: 0.82rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text); }
+    .system-title { font-family: var(--font-mono); font-size: 0.8rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
     .system-status { font-family: var(--font-mono); font-size: 0.65rem; color: var(--text-muted); display: flex; align-items: center; gap: 6px; }
     .status-dot { width: 6px; height: 6px; background: var(--accent); border-radius: 50%; box-shadow: 0 0 8px var(--accent); }
 
-    /* Precision Panels */
     .hud-panel {
       background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius);
-      padding: 14px; margin-bottom: 12px; position: relative;
+      padding: 14px; margin-bottom: 10px; position: relative;
     }
     .hud-panel-title {
       font-family: var(--font-mono); font-size: 0.68rem; font-weight: 600; text-transform: uppercase;
@@ -95,34 +92,31 @@
       justify-content: space-between; align-items: center;
     }
 
-    /* Buttons & Inputs */
     .btn {
       background: var(--surface); color: var(--text); border: 1px solid var(--border-bright);
       font-family: var(--font-mono); font-size: 0.72rem; font-weight: 600; text-transform: uppercase;
       letter-spacing: 0.05em; padding: 8px 12px; border-radius: var(--radius); cursor: pointer;
-      display: inline-flex; align-items: center; justify-content: center; gap: 6px; transition: border-color 0.15s, background 0.15s;
+      display: inline-flex; align-items: center; justify-content: center; gap: 6px;
     }
     .btn:hover { background: var(--panel-hover); border-color: var(--accent); }
     .btn:active { transform: translateY(1px); }
     .btn-accent { background: var(--accent); color: #000; border-color: var(--accent); font-weight: 700; }
-    .btn-accent:hover { background: #fff; border-color: #fff; }
     .btn-full { width: 100%; }
 
     input, select {
       width: 100%; background: var(--bg); border: 1px solid var(--border);
       color: var(--text); padding: 8px 10px; border-radius: var(--radius); font-size: 0.8rem;
-      font-family: var(--font-mono); outline: none; transition: border-color 0.15s;
+      font-family: var(--font-mono); outline: none;
     }
     input:focus, select:focus { border-color: var(--accent); }
 
-    /* Dashboard Telemetry Layout */
-    .metric-hero { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; }
+    .metric-hero { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
     .metric-value-large { font-family: var(--font-mono); font-size: 2rem; font-weight: 700; letter-spacing: -0.04em; }
     .metric-target-sub { font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-muted); }
 
     .segmented-macro-bar {
       width: 100%; height: 5px; background: var(--surface); border: 1px solid var(--border);
-      display: flex; gap: 1px; margin-bottom: 14px;
+      display: flex; gap: 1px; margin-bottom: 12px;
     }
     .segment-fill { height: 100%; transition: width 0.3s ease; }
 
@@ -137,14 +131,13 @@
     .macro-cell-val { font-family: var(--font-mono); font-size: 1.05rem; font-weight: 700; }
     .macro-cell-sub { font-family: var(--font-mono); font-size: 0.62rem; color: var(--text-muted); margin-top: 2px; }
 
-    /* High Precision Chart Canvas & HUD */
-    .chart-container-node { position: relative; width: 100%; height: 230px; margin-top: 8px; }
-    #interactiveTrendCanvas { width: 100%; height: 100%; display: block; }
+    .chart-container-node { position: relative; width: 100%; height: 210px; margin-top: 8px; }
+    #interactiveTrendCanvas { width: 100%; height: 100%; display: block; touch-action: none; }
     
     .chart-scrubber-hud {
       display: flex; justify-content: space-between; align-items: center; background: var(--bg);
-      border: 1px solid var(--border); padding: 8px 10px; font-family: var(--font-mono);
-      font-size: 0.7rem; border-radius: var(--radius); margin-bottom: 8px; min-height: 34px;
+      border: 1px solid var(--border); padding: 7px 10px; font-family: var(--font-mono);
+      font-size: 0.68rem; border-radius: var(--radius); margin-bottom: 6px; min-height: 32px;
     }
     .chart-metric-nav { display: flex; gap: 4px; }
     .chart-filter-chip {
@@ -154,31 +147,28 @@
     }
     .chart-filter-chip.active { color: var(--text); border-color: var(--accent); background: var(--accent-muted); }
 
-    /* Quick Cloud Fast Access Row */
-    .fast-access-strip { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
+    .fast-access-strip { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px; scrollbar-width: none; }
     .fast-access-strip::-webkit-scrollbar { display: none; }
     .chain-chip {
       background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius);
       padding: 6px 10px; font-family: var(--font-mono); font-size: 0.68rem; font-weight: 600;
       white-space: nowrap; cursor: pointer; text-transform: uppercase; color: var(--text-muted);
     }
-    .chain-chip:hover { border-color: var(--text-muted); color: var(--text); }
 
-    /* Feed Items */
     .telemetry-row {
       display: flex; justify-content: space-between; align-items: center; padding: 9px 10px;
       background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius);
       margin-bottom: 6px; font-size: 0.8rem;
     }
-    .telemetry-row:hover { border-color: var(--border-bright); }
     .tag-mono {
       font-family: var(--font-mono); font-size: 0.65rem; padding: 2px 5px;
       border: 1px solid var(--border); border-radius: var(--radius); color: var(--text-muted);
     }
 
-    /* Minimal Bottom Dock */
     .minimal-dock {
-      position: fixed; bottom: 0; left: 0; right: 0; height: 54px;
+      position: fixed; bottom: 0; left: 0; right: 0;
+      height: calc(52px + env(safe-area-inset-bottom));
+      padding-bottom: env(safe-area-inset-bottom);
       background: var(--bg); border-top: 1px solid var(--border); display: flex;
       justify-content: center; z-index: 1000;
     }
@@ -186,7 +176,7 @@
     .dock-item {
       flex: 1; background: none; border: none; color: var(--text-dim); font-family: var(--font-mono);
       font-size: 0.68rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
-      cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
       transition: color 0.15s, border-top 0.15s; border-top: 2px solid transparent;
     }
     .dock-item.active { color: var(--text); border-top-color: var(--accent); background: var(--panel); }
@@ -198,20 +188,16 @@
 <body>
 
   <div class="app-shell">
-    <!-- Header -->
     <header class="telemetry-header">
       <div>
-        <div class="system-title">OmniMacro // System</div>
+        <div class="system-title">OmniMacro // Mobile</div>
         <div class="system-status"><span class="status-dot"></span> <span id="sys-mode-label">LOCAL LEDGER SYNCED</span></div>
       </div>
       <div id="date-readout" style="font-family:var(--font-mono); font-size:0.68rem; color:var(--text-muted);"></div>
     </header>
 
-    <!-- =======================================================================
-         VIEW 1: METRIC DASHBOARD
-         ======================================================================= -->
+    <!-- TAB 1: TELEMETRY DASHBOARD -->
     <section id="tab-dashboard" class="view-page active">
-      <!-- High-Precision Telemetry Fuel Matrix -->
       <div class="hud-panel">
         <div class="hud-panel-title">
           <span>Fuel Matrix</span>
@@ -229,14 +215,12 @@
           </div>
         </div>
 
-        <!-- Segmented Energy Split Bar (P / C / F) -->
         <div class="segmented-macro-bar">
           <div id="seg-fill-pro" class="segment-fill" style="background:var(--protein); width:0%;"></div>
           <div id="seg-fill-carb" class="segment-fill" style="background:var(--carb); width:0%;"></div>
           <div id="seg-fill-fat" class="segment-fill" style="background:var(--fat); width:0%;"></div>
         </div>
 
-        <!-- 3-Column Macro Metric Array -->
         <div class="macro-grid-matrix">
           <div class="macro-cell">
             <div class="macro-cell-header"><span style="color:var(--protein);">PRO</span><span id="pct-pro">0%</span></div>
@@ -256,9 +240,8 @@
         </div>
       </div>
 
-      <!-- Live Dynamic Chain Indexing Strip -->
       <div class="hud-panel" style="padding: 10px 14px;">
-        <div class="hud-panel-title" style="margin-bottom:6px;">Direct Cloud Connect</div>
+        <div class="hud-panel-title" style="margin-bottom:6px;">Direct Cloud Chains</div>
         <div class="fast-access-strip">
           <div class="chain-chip" onclick="openDirectBrand('McDonald\'s', 'burger')">McDonald's</div>
           <div class="chain-chip" onclick="openDirectBrand('Chick-fil-A', 'chicken')">Chick-fil-A</div>
@@ -269,10 +252,10 @@
         </div>
       </div>
 
-      <!-- High-Resolution Timeline & Interactive Cursor Scrubber -->
+      <!-- Canvas Chart HUD -->
       <div class="hud-panel">
         <div class="hud-panel-title">
-          <span>Telemetry Trendline</span>
+          <span>Accurate Trendline</span>
           <div class="chart-metric-nav">
             <button class="chart-filter-chip active" onclick="setChartMetric('cal', this)">Kcal</button>
             <button class="chart-filter-chip" onclick="setChartMetric('pro', this)">Pro</button>
@@ -281,9 +264,8 @@
           </div>
         </div>
 
-        <!-- Live Cursor Readout HUD -->
-        <div class="chart-scrubber-hud" id="chart-scrubber-hud">
-          <span id="hud-point-date">Hover/Touch Graph for Daily Scrub</span>
+        <div class="chart-scrubber-hud">
+          <span id="hud-point-date">Touch/Scrub Graph For Point Telemetry</span>
           <span id="hud-point-stats" style="color:var(--accent);">--</span>
         </div>
 
@@ -297,7 +279,7 @@
         </div>
       </div>
 
-      <!-- Daily Intake Chrono Log -->
+      <!-- Feed List -->
       <div class="hud-panel">
         <div class="hud-panel-title">
           <span>Intake Feed // Today</span>
@@ -307,14 +289,12 @@
       </div>
     </section>
 
-    <!-- =======================================================================
-         VIEW 2: RADAR & VENUE SCANNER
-         ======================================================================= -->
+    <!-- TAB 2: RADAR -->
     <section id="tab-radar" class="view-page">
       <div class="hud-panel">
         <div class="hud-panel-title">
-          <span>Location Sensor</span>
-          <span id="radar-sensor-state" class="tag-mono">READY</span>
+          <span>Perimeter Scanner</span>
+          <span id="radar-sensor-state" class="tag-mono">STANDBY</span>
         </div>
 
         <button class="btn btn-accent btn-full" onclick="initiateRadarScan()">
@@ -322,7 +302,7 @@
         </button>
 
         <div style="display: flex; gap: 6px; margin-top: 8px;">
-          <input type="text" id="manual-query-input" placeholder="Query City or Coordinates..." onkeydown="if(event.key==='Enter') searchCityDirect()">
+          <input type="text" id="manual-query-input" placeholder="Or type any city (e.g. Austin, Tokyo)..." onkeydown="if(event.key==='Enter') searchCityDirect()">
           <button class="btn" onclick="searchCityDirect()">Search</button>
         </div>
 
@@ -330,7 +310,6 @@
         <div id="radar-results-list" style="margin-top: 10px;"></div>
       </div>
 
-      <!-- Cloud Menu Stream -->
       <div class="hud-panel" id="venue-feed-panel" style="display: none;">
         <div class="hud-panel-title">
           <div>
@@ -340,25 +319,22 @@
           <button class="btn" style="font-size:0.62rem; padding: 4px 8px;" onclick="promptManualDish()">+ Custom Item</button>
         </div>
 
-        <input type="text" id="venue-filter-input" placeholder="Filter dish or beverage..." onkeydown="if(event.key==='Enter') fetchCloudMenu(this.value)">
+        <input type="text" id="venue-filter-input" placeholder="Filter dish name..." onkeydown="if(event.key==='Enter') fetchCloudMenu(this.value)">
 
         <div id="menu-fetch-status" style="display:none; font-family:var(--font-mono); font-size:0.7rem; color:var(--accent); margin-top:8px;"></div>
         <div id="venue-menu-items" style="margin-top: 10px; max-height: 420px; overflow-y: auto;"></div>
       </div>
     </section>
 
-    <!-- =======================================================================
-         VIEW 3: CONTROL & CALIBRATION (SETTINGS)
-         ======================================================================= -->
+    <!-- TAB 3: SETTINGS -->
     <section id="tab-settings" class="view-page">
-      <!-- Target Configuration -->
       <div class="hud-panel">
-        <div class="hud-panel-title">Daily Intake Calibration</div>
+        <div class="hud-panel-title">Daily Nutritional Targets</div>
         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
-          <div><label class="tag-mono">Target Energy (kcal)</label><input type="number" id="cfg-goal-cal" onchange="syncCalibration()"></div>
-          <div><label class="tag-mono">Protein Goal (g)</label><input type="number" id="cfg-goal-pro" onchange="syncCalibration()"></div>
-          <div><label class="tag-mono">Carb Goal (g)</label><input type="number" id="cfg-goal-carb" onchange="syncCalibration()"></div>
-          <div><label class="tag-mono">Fat Goal (g)</label><input type="number" id="cfg-goal-fat" onchange="syncCalibration()"></div>
+          <div><label class="tag-mono">Calories (kcal)</label><input type="number" id="cfg-goal-cal" onchange="syncCalibration()"></div>
+          <div><label class="tag-mono">Protein (g)</label><input type="number" id="cfg-goal-pro" onchange="syncCalibration()"></div>
+          <div><label class="tag-mono">Carbs (g)</label><input type="number" id="cfg-goal-carb" onchange="syncCalibration()"></div>
+          <div><label class="tag-mono">Fats (g)</label><input type="number" id="cfg-goal-fat" onchange="syncCalibration()"></div>
         </div>
 
         <div class="hud-panel-title" style="margin-top: 14px; margin-bottom: 6px;">Macro Preset Calculations</div>
@@ -369,25 +345,24 @@
         </div>
       </div>
 
-      <!-- Telemetry Visual Controls -->
       <div class="hud-panel">
-        <div class="hud-panel-title">Telemetry Visualizer</div>
+        <div class="hud-panel-title">Visuals & Parameters</div>
         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
           <div>
-            <label class="tag-mono">Base Theme</label>
+            <label class="tag-mono">Theme</label>
             <select id="cfg-theme" onchange="setSystemTheme(this.value)">
-              <option value="oled">OLED Pitch Black</option>
+              <option value="oled">OLED Black</option>
               <option value="obsidian">Obsidian Slate</option>
-              <option value="studio-light">Studio Light</option>
+              <option value="studio-light">Studio White</option>
             </select>
           </div>
           <div>
-            <label class="tag-mono">Accent Hue</label>
+            <label class="tag-mono">Accent</label>
             <select id="cfg-accent" onchange="setSystemAccent(this.value)">
-              <option value="cyan">Electric Cyan</option>
-              <option value="emerald">Matrix Emerald</option>
-              <option value="amber">Industrial Amber</option>
-              <option value="white">Pure White</option>
+              <option value="cyan">Cyan</option>
+              <option value="emerald">Emerald</option>
+              <option value="amber">Amber</option>
+              <option value="white">White</option>
             </select>
           </div>
         </div>
@@ -403,28 +378,26 @@
 
         <div style="margin-top: 10px;">
           <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
-            <label class="tag-mono">Radar Perimeter Radius</label>
+            <label class="tag-mono">Perimeter Distance</label>
             <span id="range-val-label" class="tag-mono">1,500m</span>
           </div>
           <input type="range" id="cfg-radar-radius" min="500" max="8000" step="250" value="1500" oninput="updateRangeRadius(this.value)">
         </div>
       </div>
 
-      <!-- Ledger Management & Export -->
       <div class="hud-panel">
-        <div class="hud-panel-title">Ledger Database & Backup</div>
+        <div class="hud-panel-title">Ledger Data & Backup</div>
         <div style="display:flex; flex-direction:column; gap:6px;">
           <button class="btn" onclick="exportLedgerJSON()">Export Ledger (JSON)</button>
           <button class="btn" onclick="document.getElementById('import-file-elem').click()">Import Ledger (JSON)</button>
           <input type="file" id="import-file-elem" style="display:none;" accept=".json" onchange="importLedgerJSON(event)">
           <button class="btn" onclick="seedSampleRealisticData()">Load 14-Day Simulation Data</button>
-          <button class="btn" style="color:var(--danger); border-color:rgba(239,68,68,0.25);" onclick="executeHardReset()">Purge Entire Local Database</button>
+          <button class="btn" style="color:var(--danger); border-color:rgba(239,68,68,0.25);" onclick="executeHardReset()">Wipe All Data</button>
         </div>
       </div>
     </section>
   </div>
 
-  <!-- Minimal Bottom Dock -->
   <nav class="minimal-dock">
     <div class="dock-inner">
       <button class="dock-item active" onclick="switchNav('dashboard', this)">Telemetry</button>
@@ -433,11 +406,7 @@
     </div>
   </nav>
 
-  <!-- =======================================================================
-       JAVASCRIPT ARCHITECTURE
-       ======================================================================= -->
   <script>
-    // System State & Keys
     const STORAGE_KEY_GOALS = 'omni_sys_goals_v2';
     const STORAGE_KEY_HISTORY = 'omni_sys_ledger_v2';
     const STORAGE_KEY_THEME = 'omni_sys_theme_v2';
@@ -445,19 +414,13 @@
     const STORAGE_KEY_WINDOW = 'omni_sys_window_v2';
     const STORAGE_KEY_RADIUS = 'omni_sys_radius_v2';
 
-    let targets = JSON.parse(localStorage.getItem(STORAGE_KEY_GOALS) || JSON.stringify({
-      cal: 2200, pro: 160, carb: 220, fat: 65
-    }));
-
-    // Historical ledger: mapped by YYYY-MM-DD
+    let targets = JSON.parse(localStorage.getItem(STORAGE_KEY_GOALS) || JSON.stringify({ cal: 2200, pro: 160, carb: 220, fat: 65 }));
     let historyLedger = JSON.parse(localStorage.getItem(STORAGE_KEY_HISTORY) || "{}");
     let chartDays = parseInt(localStorage.getItem(STORAGE_KEY_WINDOW) || "14");
     let searchRadius = parseInt(localStorage.getItem(STORAGE_KEY_RADIUS) || "1500");
     let activeMetric = 'cal';
 
-    function getTodayString() {
-      return new Date().toISOString().split('T')[0];
-    }
+    function getTodayString() { return new Date().toISOString().split('T')[0]; }
 
     function ensureTodayEntry() {
       const today = getTodayString();
@@ -467,27 +430,16 @@
       return historyLedger[today];
     }
 
-    // =========================================================================
-    // NAVIGATION CONTROLLER
-    // =========================================================================
     function switchNav(viewId, triggerElem) {
       document.querySelectorAll('.view-page').forEach(v => v.classList.remove('active'));
       document.querySelectorAll('.dock-item').forEach(d => d.classList.remove('active'));
       document.getElementById(`tab-${viewId}`).classList.add('active');
       triggerElem.classList.add('active');
-
-      if (viewId === 'dashboard') {
-        renderHighPrecisionChart();
-      }
+      if (viewId === 'dashboard') renderHighPrecisionChart();
     }
 
-    // =========================================================================
-    // TELEMETRY HUD & DASHBOARD MATRIX
-    // =========================================================================
     function updateTelemetryMatrix() {
       const today = ensureTodayEntry();
-
-      // Energy
       const currentCal = today.cal;
       const targetCal = targets.cal;
       const remainingCal = targetCal - currentCal;
@@ -500,25 +452,22 @@
 
       remainElem.textContent = Math.abs(remainingCal).toLocaleString();
       if (remainingCal >= 0) {
-        deltaTag.textContent = `${remainingCal} KCAL REMAINING`;
+        deltaTag.textContent = `${remainingCal} KCAL LEFT`;
         deltaTag.style.color = 'var(--accent)';
       } else {
-        deltaTag.textContent = `${Math.abs(remainingCal)} KCAL SURPLUS`;
+        deltaTag.textContent = `${Math.abs(remainingCal)} KCAL OVER`;
         deltaTag.style.color = 'var(--danger)';
       }
 
-      // Energy Multipliers: P = 4 kcal/g, C = 4 kcal/g, F = 9 kcal/g
       const calFromPro = today.pro * 4;
       const calFromCarb = today.carb * 4;
       const calFromFat = today.fat * 9;
       const totalDerivedKcal = calFromPro + calFromCarb + calFromFat || 1;
 
-      // Segmented Split Bar
       document.getElementById('seg-fill-pro').style.width = `${(calFromPro / totalDerivedKcal) * 100}%`;
       document.getElementById('seg-fill-carb').style.width = `${(calFromCarb / totalDerivedKcal) * 100}%`;
       document.getElementById('seg-fill-fat').style.width = `${(calFromFat / totalDerivedKcal) * 100}%`;
 
-      // Matrix Cells
       document.getElementById('val-pro').innerHTML = `${today.pro}<span style="font-size:0.65rem; color:var(--text-muted);">g</span>`;
       document.getElementById('pct-pro').textContent = `${Math.round((today.pro / (targets.pro || 1)) * 100)}%`;
       document.getElementById('cal-pro').textContent = `${calFromPro} kcal (${Math.round((calFromPro/totalDerivedKcal)*100)}%)`;
@@ -538,9 +487,8 @@
     function renderChronoLogs() {
       const today = ensureTodayEntry();
       const list = document.getElementById('chrono-log-list');
-
       if (!today.logs || today.logs.length === 0) {
-        list.innerHTML = `<div style="font-family:var(--font-mono); font-size:0.7rem; color:var(--text-muted); padding:10px 0;">NO ENTRIES RECORDED TODAY</div>`;
+        list.innerHTML = `<div style="font-family:var(--font-mono); font-size:0.7rem; color:var(--text-muted); padding:8px 0;">NO ENTRIES RECORDED TODAY</div>`;
         return;
       }
 
@@ -587,15 +535,11 @@
 
     function clearDayIntake() {
       if (!confirm("Flush all entries for today?")) return;
-      const todayStr = getTodayString();
-      historyLedger[todayStr] = { cal: 0, pro: 0, carb: 0, fat: 0, logs: [] };
+      historyLedger[getTodayString()] = { cal: 0, pro: 0, carb: 0, fat: 0, logs: [] };
       localStorage.setItem(STORAGE_KEY_HISTORY, JSON.stringify(historyLedger));
       updateTelemetryMatrix();
     }
 
-    // =========================================================================
-    // HIGH-RESOLUTION ACCURATE CHART ENGINE WITH CURSOR SCRUBBER
-    // =========================================================================
     let cachedChartDataset = [];
 
     function setChartMetric(metric, btnElem) {
@@ -631,7 +575,6 @@
       const ctx = canvas.getContext('2d');
       const rect = canvas.parentElement.getBoundingClientRect();
 
-      // High DPI retina normalization
       const dpr = window.devicePixelRatio || 2;
       canvas.width = Math.floor(rect.width * dpr);
       canvas.height = Math.floor(rect.height * dpr);
@@ -645,18 +588,15 @@
       const dataset = cachedChartDataset;
       const values = dataset.map(d => d[activeMetric]);
 
-      // Calculate Target & Maximum Scale
       const targetVal = targets[activeMetric] || 100;
       const maxValue = Math.max(...values, targetVal) * 1.25 || 100;
 
-      // Calculate Rolling Window Average
       const recordedDays = dataset.filter(d => d[activeMetric] > 0);
       const avg = recordedDays.length ? Math.round(dataset.reduce((acc, c) => acc + c[activeMetric], 0) / dataset.length) : 0;
       const unit = activeMetric === 'cal' ? 'KCAL' : 'G';
-      document.getElementById('chart-avg-indicator').textContent = `WINDOW AVG: ${avg} ${unit}/D`;
+      document.getElementById('chart-avg-indicator').textContent = `AVG: ${avg} ${unit}/D`;
       document.getElementById('chart-range-label').textContent = `WINDOW: ${chartDays} DAYS`;
 
-      // Geometry coordinates
       const padLeft = 8;
       const padRight = 8;
       const padBottom = 20;
@@ -667,12 +607,11 @@
       const stepX = plotW / (dataset.length - 1);
       const points = dataset.map((d, i) => {
         const val = d[activeMetric];
-        // Accurate coordinate mapping: zero = flatline on zero baseline
         const y = padTop + plotH - (val / maxValue) * plotH;
         return { x: padLeft + i * stepX, y, val, date: d.label, fullDate: d.date };
       });
 
-      // Target Guideline (Dashed Technical Line)
+      // Target Guideline
       const targetY = padTop + plotH - (targetVal / maxValue) * plotH;
       ctx.save();
       ctx.strokeStyle = '#27272a';
@@ -684,7 +623,7 @@
       ctx.stroke();
       ctx.restore();
 
-      // Flat zero baseline
+      // Zero baseline
       ctx.strokeStyle = '#18181b';
       ctx.lineWidth = 1;
       ctx.beginPath();
@@ -692,18 +631,12 @@
       ctx.lineTo(w - padRight, padTop + plotH);
       ctx.stroke();
 
-      // Metric Line Colors
-      const metricColors = {
-        cal: '#00f0ff',
-        pro: '#38bdf8',
-        carb: '#f59e0b',
-        fat: '#fb7185'
-      };
+      const metricColors = { cal: '#00f0ff', pro: '#38bdf8', carb: '#f59e0b', fat: '#fb7185' };
       const strokeColor = metricColors[activeMetric] || '#00f0ff';
 
-      // Draw Precision Area Fill
+      // Area Fill
       const areaGrad = ctx.createLinearGradient(0, padTop, 0, padTop + plotH);
-      areaGrad.addColorStop(0, strokeColor + '28');
+      areaGrad.addColorStop(0, strokeColor + '25');
       areaGrad.addColorStop(1, strokeColor + '00');
 
       ctx.beginPath();
@@ -714,7 +647,7 @@
       ctx.fillStyle = areaGrad;
       ctx.fill();
 
-      // Draw Main Crisp Plot Line
+      // Crisp Line
       ctx.beginPath();
       points.forEach((pt, i) => {
         if (i === 0) ctx.moveTo(pt.x, pt.y);
@@ -724,7 +657,7 @@
       ctx.lineWidth = 1.75;
       ctx.stroke();
 
-      // X-Axis Date Identifiers
+      // X-Axis Identifiers
       ctx.fillStyle = '#52525b';
       ctx.font = `9px var(--font-mono)`;
       ctx.textAlign = 'center';
@@ -735,11 +668,10 @@
         }
       });
 
-      // Interactive Scrubbing Crosshair & Pinpoint
+      // Crosshair Hover
       if (scrubIndex >= 0 && scrubIndex < points.length) {
         const activePt = points[scrubIndex];
 
-        // Vertical Hairline
         ctx.strokeStyle = '#a1a1aa';
         ctx.lineWidth = 1;
         ctx.beginPath();
@@ -747,7 +679,6 @@
         ctx.lineTo(activePt.x, padTop + plotH);
         ctx.stroke();
 
-        // Highlighting Pip
         ctx.fillStyle = '#ffffff';
         ctx.beginPath();
         ctx.arc(activePt.x, activePt.y, 4, 0, Math.PI * 2);
@@ -756,18 +687,16 @@
         ctx.lineWidth = 2;
         ctx.stroke();
 
-        // Update HUD Element Above Canvas
         const delta = activePt.val - targetVal;
         const deltaSign = delta > 0 ? `+${delta}` : `${delta}`;
-        document.getElementById('hud-point-date').textContent = `${activePt.fullDate} (${activePt.date})`;
+        document.getElementById('hud-point-date').textContent = `${activePt.fullDate}`;
         document.getElementById('hud-point-stats').innerHTML = `
           <span>${activePt.val} ${unit}</span>
-          <span style="color:${delta >= 0 ? 'var(--accent)' : 'var(--text-muted)'}; margin-left:6px;">(${deltaSign} vs target)</span>
+          <span style="color:${delta >= 0 ? 'var(--accent)' : 'var(--text-muted)'}; margin-left:6px;">(${deltaSign})</span>
         `;
       }
     }
 
-    // Chart Mouse & Touch Scrubber Attachments
     const chartCanvas = document.getElementById('interactiveTrendCanvas');
     function handlePointerScrub(e) {
       if (!cachedChartDataset.length) return;
@@ -784,15 +713,11 @@
     chartCanvas.addEventListener('touchmove', handlePointerScrub, { passive: true });
     chartCanvas.addEventListener('mouseleave', () => {
       renderHighPrecisionChart(-1);
-      document.getElementById('hud-point-date').textContent = 'Hover/Touch Graph for Daily Scrub';
+      document.getElementById('hud-point-date').textContent = 'Touch/Scrub Graph For Point Telemetry';
       document.getElementById('hud-point-stats').textContent = '--';
     });
 
-    // =========================================================================
-    // HIGH-RELIABILITY LOCATION & RESTAURANT RADAR ENGINE
-    // =========================================================================
     async function acquireReliableCoordinates() {
-      // 1. Try GPS with a 3500ms timeout
       const hardwareGPS = new Promise((resolve) => {
         if (!navigator.geolocation || location.protocol === 'file:') return resolve(null);
         navigator.geolocation.getCurrentPosition(
@@ -805,7 +730,6 @@
       const gpsResult = await hardwareGPS;
       if (gpsResult) return gpsResult;
 
-      // 2. Reliable IP fallback via ipwho.is (CORS free & fast)
       try {
         const res = await fetch('https://ipwho.is/');
         const data = await res.json();
@@ -814,7 +738,6 @@
         }
       } catch (e) {}
 
-      // 3. Absolute failsafe fallback to New York coordinates
       return { lat: 40.7128, lon: -74.0060, source: "NEW YORK (DEFAULT)" };
     }
 
@@ -826,14 +749,13 @@
       feedback.style.display = 'block';
       resultsBox.innerHTML = '';
       stateTag.textContent = 'SCANNING';
-      feedback.textContent = '[1/2] Resolving position telemetry...';
+      feedback.textContent = '[1/2] Resolving telemetry...';
 
       const coords = await acquireReliableCoordinates();
       stateTag.textContent = 'LOCKED';
-      feedback.textContent = `[2/2] Scanning ${searchRadius}m perimeter for dining nodes (${coords.source})...`;
+      feedback.textContent = `[2/2] Scanning ${searchRadius}m for dining nodes (${coords.source})...`;
 
       try {
-        // High-efficiency Overpass query
         const query = `[out:json][timeout:10];(node["amenity"~"restaurant|fast_food|cafe"](around:${searchRadius},${coords.lat},${coords.lon}););out center 30;`;
         const resp = await fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`);
         if (!resp.ok) throw new Error("Overpass Throttled");
@@ -845,7 +767,7 @@
 
         renderScannedVenues(dedupeVenues(venues));
       } catch (err) {
-        feedback.textContent = 'Overpass node throttled. Utilizing instant Nominatim failover...';
+        feedback.textContent = 'Switching to Nominatim fallback...';
         queryNominatimFallback(coords.lat, coords.lon);
       }
     }
@@ -858,7 +780,7 @@
         const venues = data.map(d => ({ name: d.display_name.split(',')[0], cuisine: 'Dining' }));
         renderScannedVenues(dedupeVenues(venues));
       } catch (e) {
-        document.getElementById('radar-feedback').textContent = 'Location scanning failed. Use manual city search box.';
+        document.getElementById('radar-feedback').textContent = 'Scan failed. Use manual search.';
       }
     }
 
@@ -867,7 +789,7 @@
       if (!q) return;
       const feedback = document.getElementById('radar-feedback');
       feedback.style.display = 'block';
-      feedback.textContent = `Querying OpenStreetMap global directory for "${q}"...`;
+      feedback.textContent = `Querying for "${q}"...`;
 
       try {
         const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=restaurants+in+${encodeURIComponent(q)}&limit=25`);
@@ -895,7 +817,7 @@
       box.innerHTML = '';
 
       if (!venues.length) {
-        box.innerHTML = `<div style="font-family:var(--font-mono); font-size:0.75rem; color:var(--text-muted); padding:10px;">NO VENUES DISCOVERED WITHIN PERIMETER</div>`;
+        box.innerHTML = `<div style="font-family:var(--font-mono); font-size:0.75rem; color:var(--text-muted); padding:10px;">NO VENUES FOUND</div>`;
         return;
       }
 
@@ -915,9 +837,6 @@
       });
     }
 
-    // =========================================================================
-    // CLOUD MENU & OPEN FOOD FACTS ENGINE
-    // =========================================================================
     function openDirectBrand(brand, keyword) {
       switchNav('radar', document.querySelectorAll('.dock-item')[1]);
       selectVenueToInspect(brand, keyword);
@@ -937,7 +856,7 @@
       const status = document.getElementById('menu-fetch-status');
       const box = document.getElementById('venue-menu-items');
       status.style.display = 'block';
-      status.textContent = `Streaming nutritional payload for "${query}"...`;
+      status.textContent = `Streaming data for "${query}"...`;
       box.innerHTML = '';
 
       try {
@@ -949,7 +868,7 @@
         let dishes = (data.products || []).map(p => parseOpenFoodFactsPayload(p)).filter(Boolean);
 
         if (dishes.length === 0 && fallback) {
-          status.textContent = `No brand items. Pulling dishes matching "${fallback}"...`;
+          status.textContent = `Pulling dishes matching "${fallback}"...`;
           const fbRes = await fetch(`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(fallback)}&search_simple=1&action=process&json=1&page_size=20&fields=product_name,nutriments`);
           const fbData = await fbRes.json();
           dishes = (fbData.products || []).map(p => parseOpenFoodFactsPayload(p)).filter(Boolean);
@@ -1003,15 +922,11 @@
       addIntakeEntry({ name: `${name} (Custom)`, cal, pro, carb, fat });
     }
 
-    // =========================================================================
-    // CALIBRATION & SYSTEM CONFIGURATION
-    // =========================================================================
     function syncCalibration() {
       targets.cal = parseInt(document.getElementById('cfg-goal-cal').value) || 2000;
       targets.pro = parseInt(document.getElementById('cfg-goal-pro').value) || 150;
       targets.carb = parseInt(document.getElementById('cfg-goal-carb').value) || 200;
       targets.fat = parseInt(document.getElementById('cfg-goal-fat').value) || 60;
-
       localStorage.setItem(STORAGE_KEY_GOALS, JSON.stringify(targets));
       updateTelemetryMatrix();
     }
@@ -1019,22 +934,18 @@
     function applyMacroPreset(preset) {
       const kcal = targets.cal;
       if (preset === 'high-protein') {
-        // 40% Pro, 40% Carb, 20% Fat
         targets.pro = Math.round((kcal * 0.40) / 4);
         targets.carb = Math.round((kcal * 0.40) / 4);
         targets.fat = Math.round((kcal * 0.20) / 9);
       } else if (preset === 'balanced') {
-        // 30% Pro, 45% Carb, 25% Fat
         targets.pro = Math.round((kcal * 0.30) / 4);
         targets.carb = Math.round((kcal * 0.45) / 4);
         targets.fat = Math.round((kcal * 0.25) / 9);
       } else if (preset === 'keto') {
-        // 25% Pro, 5% Carb, 70% Fat
         targets.pro = Math.round((kcal * 0.25) / 4);
         targets.carb = Math.round((kcal * 0.05) / 4);
         targets.fat = Math.round((kcal * 0.70) / 9);
       }
-
       document.getElementById('cfg-goal-pro').value = targets.pro;
       document.getElementById('cfg-goal-carb').value = targets.carb;
       document.getElementById('cfg-goal-fat').value = targets.fat;
@@ -1080,33 +991,31 @@
       const reader = new FileReader();
       reader.onload = (e) => {
         try {
-          const parsed = JSON.parse(e.target.result);
-          historyLedger = parsed;
+          historyLedger = JSON.parse(e.target.result);
           localStorage.setItem(STORAGE_KEY_HISTORY, JSON.stringify(historyLedger));
           updateTelemetryMatrix();
-          alert("Ledger successfully imported.");
+          alert("Ledger imported.");
         } catch (err) {
-          alert("Invalid JSON ledger file.");
+          alert("Invalid JSON.");
         }
       };
       reader.readAsText(file);
     }
 
     function seedSampleRealisticData() {
-      if (!confirm("Populate last 14 days with simulated nutritional records?")) return;
+      if (!confirm("Populate 14-day history simulation?")) return;
       const now = new Date();
       for (let i = 13; i >= 1; i--) {
         const d = new Date(now);
         d.setDate(d.getDate() - i);
         const ds = d.toISOString().split('T')[0];
-        // Introduce realistic variance (some zero days, some hit targets)
-        const isSkipped = i === 4 || i === 9; // Unlogged days become flat zero lines
+        const isSkipped = i === 4 || i === 9;
         historyLedger[ds] = isSkipped ? { cal: 0, pro: 0, carb: 0, fat: 0, logs: [] } : {
           cal: Math.round(1950 + (Math.random() * 450)),
           pro: Math.round(140 + (Math.random() * 35)),
           carb: Math.round(190 + (Math.random() * 50)),
           fat: Math.round(55 + (Math.random() * 20)),
-          logs: [{ name: "Simulated Intake Record", cal: 2100, pro: 155, carb: 200, fat: 65 }]
+          logs: [{ name: "Simulated Intake", cal: 2100, pro: 155, carb: 200, fat: 65 }]
         };
       }
       localStorage.setItem(STORAGE_KEY_HISTORY, JSON.stringify(historyLedger));
@@ -1114,22 +1023,17 @@
     }
 
     function executeHardReset() {
-      if (confirm("WARNING: All historical data, targets, and logs will be permanently deleted.")) {
+      if (confirm("WARNING: All data will be purged.")) {
         localStorage.clear();
         location.reload();
       }
     }
 
-    // =========================================================================
-    // SYSTEM INITIALIZATION
-    // =========================================================================
     window.addEventListener('DOMContentLoaded', () => {
-      // Date readout
       document.getElementById('date-readout').textContent = new Date().toLocaleDateString('en-US', {
         weekday: 'short', month: 'short', day: 'numeric'
       }).toUpperCase();
 
-      // Restore configuration
       const savedTheme = localStorage.getItem(STORAGE_KEY_THEME) || 'oled';
       const savedAccent = localStorage.getItem(STORAGE_KEY_ACCENT) || 'cyan';
       document.documentElement.setAttribute('data-theme', savedTheme);
@@ -1151,6 +1055,11 @@
       window.addEventListener('resize', () => {
         renderHighPrecisionChart();
       });
+
+      // Register Service Worker
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('./sw.js').catch(() => {});
+      }
     });
   </script>
 </body>
