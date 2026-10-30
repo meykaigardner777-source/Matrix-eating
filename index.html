@@ -1061,6 +1061,58 @@
         navigator.serviceWorker.register('./sw.js').catch(() => {});
       }
     });
+    // =========================================================================
+    // NATIVE INSTALL PROMPT CONTROLLER
+    // =========================================================================
+    let deferredInstallPrompt = null;
+    const installBanner = document.getElementById('pwa-install-banner');
+    const installBtn = document.getElementById('pwa-install-btn');
+    const iosBanner = document.getElementById('ios-install-banner');
+
+    // 1. Listen for Android / Chrome / Edge Native Install Event
+    window.addEventListener('beforeinstallprompt', (e) => {
+      // Prevent browser from automatically showing minimal infobar
+      e.preventDefault();
+      deferredInstallPrompt = e;
+
+      // Unhide the prominent OLED Install Banner
+      if (installBanner) {
+        installBanner.style.display = 'block';
+      }
+    });
+
+    // 2. Trigger OS Prompt on Button Tap
+    if (installBtn) {
+      installBtn.addEventListener('click', async () => {
+        if (!deferredInstallPrompt) return;
+
+        // Open the native operating system prompt modal
+        deferredInstallPrompt.prompt();
+
+        const { outcome } = await deferredInstallPrompt.userChoice;
+        console.log(`PWA Prompt Outcome: ${outcome}`);
+
+        // Dismiss banner
+        deferredInstallPrompt = null;
+        installBanner.style.display = 'none';
+      });
+    }
+
+    // 3. Detect if already installed or standalone
+    window.addEventListener('appinstalled', () => {
+      if (installBanner) installBanner.style.display = 'none';
+      if (iosBanner) iosBanner.style.display = 'none';
+      deferredInstallPrompt = null;
+      console.log('OmniMacro successfully installed to Home Screen');
+    });
+
+    // 4. iOS Detection: Show manual banner if on mobile Safari not in standalone
+    const isIOSDevice = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    const isAlreadyStandalone = window.navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches;
+
+    if (isIOSDevice && !isAlreadyStandalone) {
+      if (iosBanner) iosBanner.style.display = 'block';
+    }
   </script>
 </body>
 </html>
