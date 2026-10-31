@@ -63,6 +63,9 @@
     [data-accent="cyan"]    { --accent: #00f0ff; --accent-muted: rgba(0, 240, 255, 0.12); }
     [data-accent="emerald"] { --accent: #10b981; --accent-muted: rgba(16, 185, 129, 0.12); }
     [data-accent="amber"]   { --accent: #f59e0b; --accent-muted: rgba(245, 158, 11, 0.12); }
+    [data-accent="crimson"] { --accent: #ef4444; --accent-muted: rgba(239, 68, 68, 0.12); }
+    [data-accent="violet"]  { --accent: #8b5cf6; --accent-muted: rgba(139, 92, 246, 0.12); }
+    [data-accent="cobalt"]  { --accent: #3b82f6; --accent-muted: rgba(59, 130, 246, 0.12); }
     [data-accent="white"]   { --accent: #f4f4f5; --accent-muted: rgba(255, 255, 255, 0.12); }
 
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: var(--font-sans); -webkit-tap-highlight-color: transparent; }
@@ -71,9 +74,27 @@
       padding-top: env(safe-area-inset-top);
       padding-bottom: calc(68px + env(safe-area-inset-bottom));
       min-height: 100vh; overflow-x: hidden;
+      position: relative;
     }
 
-    .app-shell { max-width: 580px; margin: 0 auto; padding: 12px 14px 20px; }
+    /* Fixed OLED Canvas for HUD Background FX */
+    #hud-bg-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .app-shell {
+      position: relative;
+      z-index: 1;
+      max-width: 580px;
+      margin: 0 auto;
+      padding: 12px 14px 20px;
+    }
 
     /* Header */
     .telemetry-header {
@@ -113,6 +134,10 @@
       font-family: var(--font-mono); outline: none;
     }
     input:focus, select:focus { border-color: var(--accent); }
+
+    .color-picker-input {
+      padding: 2px 4px; height: 36px; cursor: pointer;
+    }
 
     /* Metrics */
     .metric-hero { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
@@ -194,8 +219,11 @@
 </head>
 <body>
 
+  <!-- Fullscreen Minimal OLED Background FX (Japanese Matrix & White Dust) -->
+  <canvas id="hud-bg-canvas"></canvas>
+
   <div class="app-shell">
-    <!-- PWA Install Prompt (Browser Tab Fallback) -->
+    <!-- PWA Install Prompt -->
     <div id="pwa-install-banner" class="hud-panel" style="display:none; border-color:var(--accent); background:#050d12; margin-bottom:12px;">
       <div style="display:flex; justify-content:space-between; align-items:center;">
         <div>
@@ -224,9 +252,7 @@
       </div>
     </header>
 
-    <!-- =======================================================================
-         VIEW 1: TELEMETRY DASHBOARD
-         ======================================================================= -->
+    <!-- VIEW 1: TELEMETRY DASHBOARD -->
     <section id="tab-dashboard" class="view-page active">
       <div class="hud-panel">
         <div class="hud-panel-title">
@@ -320,9 +346,7 @@
       </div>
     </section>
 
-    <!-- =======================================================================
-         VIEW 2: RADAR & GEOFENCE AUTO-DISCOVERY
-         ======================================================================= -->
+    <!-- VIEW 2: RADAR & GEOFENCE -->
     <section id="tab-radar" class="view-page">
       <div class="hud-panel" style="border-color:var(--accent);">
         <div class="hud-panel-title">
@@ -376,9 +400,7 @@
       </div>
     </section>
 
-    <!-- =======================================================================
-         VIEW 3: SETTINGS & PRESETS
-         ======================================================================= -->
+    <!-- VIEW 3: SETTINGS & PRESETS -->
     <section id="tab-settings" class="view-page">
       <div class="hud-panel">
         <div class="hud-panel-title">Daily Nutritional Targets</div>
@@ -397,11 +419,12 @@
         </div>
       </div>
 
+      <!-- Accent & Themes Customization -->
       <div class="hud-panel">
-        <div class="hud-panel-title">Visuals & Parameters</div>
+        <div class="hud-panel-title">Visuals & Color Matrix</div>
         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
           <div>
-            <label class="tag-mono">Theme</label>
+            <label class="tag-mono">Theme Surface</label>
             <select id="cfg-theme" onchange="setSystemTheme(this.value)">
               <option value="oled">OLED Black</option>
               <option value="obsidian">Obsidian Slate</option>
@@ -409,13 +432,25 @@
             </select>
           </div>
           <div>
-            <label class="tag-mono">Accent</label>
+            <label class="tag-mono">Accent Preset</label>
             <select id="cfg-accent" onchange="setSystemAccent(this.value)">
-              <option value="cyan">Cyan</option>
-              <option value="emerald">Emerald</option>
-              <option value="amber">Amber</option>
-              <option value="white">White</option>
+              <option value="cyan">Cyan (#00f0ff)</option>
+              <option value="emerald">Emerald (#10b981)</option>
+              <option value="amber">Amber (#f59e0b)</option>
+              <option value="crimson">Crimson (#ef4444)</option>
+              <option value="violet">Violet (#8b5cf6)</option>
+              <option value="cobalt">Cobalt (#3b82f6)</option>
+              <option value="white">White (#f4f4f5)</option>
+              <option value="custom">Custom Hex</option>
             </select>
+          </div>
+        </div>
+
+        <div id="custom-accent-row" style="margin-top: 10px; display: none;">
+          <label class="tag-mono">Custom Accent Color (Hex)</label>
+          <div style="display: flex; gap: 8px; margin-top: 4px; align-items: center;">
+            <input type="color" id="cfg-accent-picker" class="color-picker-input" style="width: 48px;" onchange="applyCustomAccentHex(this.value)">
+            <input type="text" id="cfg-accent-hex" placeholder="#00f0ff" style="flex: 1;" onchange="applyCustomAccentHex(this.value)">
           </div>
         </div>
 
@@ -434,6 +469,31 @@
             <span id="range-val-label" class="tag-mono">1,500m</span>
           </div>
           <input type="range" id="cfg-radar-radius" min="500" max="8000" step="250" value="1500" oninput="updateRangeRadius(this.value)">
+        </div>
+      </div>
+
+      <!-- Background HUD Animations Customization -->
+      <div class="hud-panel">
+        <div class="hud-panel-title">Background HUD FX (Minimal White)</div>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
+          <div>
+            <label class="tag-mono">Japanese Matrix</label>
+            <select id="cfg-fx-matrix" onchange="setMatrixSetting(this.value)">
+              <option value="0">OFF</option>
+              <option value="0.04" selected>Dim (4%)</option>
+              <option value="0.08">Subtle (8%)</option>
+              <option value="0.15">Active (15%)</option>
+            </select>
+          </div>
+          <div>
+            <label class="tag-mono">Drifting Dust</label>
+            <select id="cfg-fx-dust" onchange="setDustSetting(this.value)">
+              <option value="0">OFF</option>
+              <option value="0.04">Dim (4%)</option>
+              <option value="0.08" selected>Subtle (8%)</option>
+              <option value="0.15">Active (15%)</option>
+            </select>
+          </div>
         </div>
       </div>
 
@@ -466,14 +526,20 @@
     const STORAGE_KEY_HISTORY = 'omni_sys_ledger_v2';
     const STORAGE_KEY_THEME = 'omni_sys_theme_v2';
     const STORAGE_KEY_ACCENT = 'omni_sys_accent_v2';
+    const STORAGE_KEY_ACCENT_CUSTOM = 'omni_sys_accent_custom_v2';
     const STORAGE_KEY_WINDOW = 'omni_sys_window_v2';
     const STORAGE_KEY_RADIUS = 'omni_sys_radius_v2';
+    const STORAGE_KEY_FX_MATRIX = 'omni_sys_fx_matrix_v2';
+    const STORAGE_KEY_FX_DUST = 'omni_sys_fx_dust_v2';
 
     let targets = JSON.parse(localStorage.getItem(STORAGE_KEY_GOALS) || JSON.stringify({ cal: 2200, pro: 160, carb: 220, fat: 65 }));
     let historyLedger = JSON.parse(localStorage.getItem(STORAGE_KEY_HISTORY) || "{}");
     let chartDays = parseInt(localStorage.getItem(STORAGE_KEY_WINDOW) || "14");
     let searchRadius = parseInt(localStorage.getItem(STORAGE_KEY_RADIUS) || "1500");
     let activeMetric = 'cal';
+
+    let fxMatrixOpacity = parseFloat(localStorage.getItem(STORAGE_KEY_FX_MATRIX) ?? "0.04");
+    let fxDustOpacity = parseFloat(localStorage.getItem(STORAGE_KEY_FX_DUST) ?? "0.08");
 
     let knownGeofenceVenues = [];
     let lastNotifiedVenue = null;
@@ -501,6 +567,113 @@
       }
 
       if (viewId === 'dashboard') renderHighPrecisionChart();
+    }
+
+    // =========================================================================
+    // BACKGROUND ANIMATION FX: JAPANESE MATRIX & WHITE DRIFTING DUST
+    // =========================================================================
+    const bgCanvas = document.getElementById('hud-bg-canvas');
+    const bgCtx = bgCanvas.getContext('2d');
+    let bgAnimFrame = null;
+
+    // Japanese Katakana glyph pool
+    const KATAKANA_GLYPHS = "ｦｱｳｴｵｶｷｹｺｻｼｽｾｿﾀﾂﾃﾅﾆﾇﾈﾊﾋﾎﾏﾐﾑﾒﾓﾔﾕﾗﾘﾜ1234567890:.-=+*";
+    const matrixFontSize = 13;
+    let matrixColumns = 0;
+    let matrixDrops = [];
+
+    // Drifting dust particles
+    const DUST_COUNT = 32;
+    let dustParticles = [];
+
+    function initBackgroundFX() {
+      const dpr = window.devicePixelRatio || 1;
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+
+      bgCanvas.width = Math.floor(w * dpr);
+      bgCanvas.height = Math.floor(h * dpr);
+      bgCtx.scale(dpr, dpr);
+
+      matrixColumns = Math.floor(w / 20);
+      matrixDrops = [];
+      for (let i = 0; i < matrixColumns; i++) {
+        matrixDrops.push(Math.floor(Math.random() * -30));
+      }
+
+      dustParticles = [];
+      for (let i = 0; i < DUST_COUNT; i++) {
+        dustParticles.push({
+          x: Math.random() * w,
+          y: Math.random() * h,
+          size: Math.random() * 1.2 + 0.5,
+          speedY: -(Math.random() * 0.28 + 0.08),
+          speedX: (Math.random() - 0.5) * 0.18,
+          alpha: Math.random() * 0.8 + 0.2
+        });
+      }
+    }
+
+    let lastFxTimestamp = 0;
+    function renderBackgroundFX(timestamp) {
+      if (!lastFxTimestamp) lastFxTimestamp = timestamp;
+      const delta = timestamp - lastFxTimestamp;
+
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+
+      bgCtx.clearRect(0, 0, w, h);
+
+      // 1. Minimal Japanese Matrix Stream
+      if (fxMatrixOpacity > 0 && delta > 45) {
+        lastFxTimestamp = timestamp;
+        bgCtx.font = `${matrixFontSize}px var(--font-mono)`;
+        for (let i = 0; i < matrixDrops.length; i++) {
+          const char = KATAKANA_GLYPHS.charAt(Math.floor(Math.random() * KATAKANA_GLYPHS.length));
+          const x = i * 20;
+          const y = matrixDrops[i] * matrixFontSize;
+
+          if (y > 0) {
+            bgCtx.fillStyle = `rgba(255, 255, 255, ${fxMatrixOpacity})`;
+            bgCtx.fillText(char, x, y);
+          }
+
+          if (y > h && Math.random() > 0.985) {
+            matrixDrops[i] = 0;
+          }
+          matrixDrops[i]++;
+        }
+      }
+
+      // 2. Drifting Dust Simulation
+      if (fxDustOpacity > 0) {
+        for (let i = 0; i < dustParticles.length; i++) {
+          const p = dustParticles[i];
+          p.x += p.speedX;
+          p.y += p.speedY;
+
+          if (p.y < 0) { p.y = h; p.x = Math.random() * w; }
+          if (p.x < 0) p.x = w;
+          if (p.x > w) p.x = 0;
+
+          bgCtx.fillStyle = `rgba(255, 255, 255, ${p.alpha * fxDustOpacity})`;
+          bgCtx.beginPath();
+          bgCtx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+          bgCtx.fill();
+        }
+      }
+
+      bgAnimFrame = requestAnimationFrame(renderBackgroundFX);
+    }
+
+    function setMatrixSetting(val) {
+      fxMatrixOpacity = parseFloat(val);
+      localStorage.setItem(STORAGE_KEY_FX_MATRIX, fxMatrixOpacity);
+    }
+
+    function setDustSetting(val) {
+      fxDustOpacity = parseFloat(val);
+      localStorage.setItem(STORAGE_KEY_FX_DUST, fxDustOpacity);
     }
 
     // =========================================================================
@@ -703,8 +876,9 @@
       ctx.lineTo(w - padRight, padTop + plotH);
       ctx.stroke();
 
-      const metricColors = { cal: '#00f0ff', pro: '#38bdf8', carb: '#f59e0b', fat: '#fb7185' };
-      const strokeColor = metricColors[activeMetric] || '#00f0ff';
+      const liveAccent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#00f0ff';
+      const metricColors = { cal: liveAccent, pro: '#38bdf8', carb: '#f59e0b', fat: '#fb7185' };
+      const strokeColor = metricColors[activeMetric] || liveAccent;
 
       const areaGrad = ctx.createLinearGradient(0, padTop, 0, padTop + plotH);
       areaGrad.addColorStop(0, strokeColor + '25');
@@ -803,7 +977,7 @@
 
     function requestNotificationAuthorization() {
       if (!('Notification' in window)) {
-        alert("Notifications not supported in this browser.");
+        alert("[!] Notifications not supported in this client.");
         return;
       }
       Notification.requestPermission().then(permission => {
@@ -865,7 +1039,7 @@
     }
 
     // =========================================================================
-    // RADAR (WORKING EXACT CODE)
+    // RADAR (PERFECT GPS TELEMETRY ENGINE - PRESERVED EXACT)
     // =========================================================================
     async function acquireReliableCoordinates() {
       const hardwareGPS = new Promise((resolve) => {
@@ -1025,12 +1199,11 @@
     }
 
     // =========================================================================
-    // 100% DYNAMIC CLOUD MENU ENGINE (ZERO LOCAL ITEMS, MULTI-MIRROR FAILOVER)
+    // 100% DYNAMIC CLOUD MENU ENGINE (ZERO LOCAL ITEMS, NO GUESSING)
     // =========================================================================
     async function queryLiveCloudMirrors(queryTerm) {
       const sanitized = queryTerm.replace(/['’]/g, '').trim();
       
-      // Multi-Mirror Cloud Cascade (US CDN, Global Cloud Endpoint, and Search API)
       const mirrorEndpoints = [
         `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(sanitized)}&search_simple=1&action=process&json=1&page_size=30`,
         `https://us.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(sanitized)}&search_simple=1&action=process&json=1&page_size=30`,
@@ -1040,7 +1213,7 @@
       for (const endpoint of mirrorEndpoints) {
         try {
           const abortCtrl = new AbortController();
-          const timer = setTimeout(() => abortCtrl.abort(), 4500); // 4.5s aggressive failover
+          const timer = setTimeout(() => abortCtrl.abort(), 4500);
 
           const response = await fetch(endpoint, {
             signal: abortCtrl.signal,
@@ -1048,14 +1221,13 @@
           });
           clearTimeout(timer);
 
-          if (!response.ok) continue; // Try next mirror if server throttled
+          if (!response.ok) continue;
 
           const data = await response.json();
           if (data && data.products && data.products.length > 0) {
             return data.products;
           }
         } catch (err) {
-          // Automatic failover to next cloud endpoint
           continue;
         }
       }
@@ -1082,7 +1254,6 @@
         .map(p => parseOpenFoodFactsPayload(p))
         .filter(Boolean);
 
-      // If venue has no verified digital menu in cloud, show honest technical status. NO GUESSING.
       if (!dishes.length) {
         box.innerHTML = `
           <div style="font-family:var(--font-mono); padding:16px 8px; border:1px solid var(--border); text-align:center;">
@@ -1166,7 +1337,7 @@
     }
 
     // =========================================================================
-    // CALIBRATION & CONTROLS
+    // CALIBRATION & VISUAL CONTROLS
     // =========================================================================
     function syncCalibration() {
       targets.cal = parseInt(document.getElementById('cfg-goal-cal').value) || 2000;
@@ -1206,8 +1377,29 @@
     }
 
     function setSystemAccent(accent) {
-      document.documentElement.setAttribute('data-accent', accent);
-      localStorage.setItem(STORAGE_KEY_ACCENT, accent);
+      const customRow = document.getElementById('custom-accent-row');
+      if (accent === 'custom') {
+        customRow.style.display = 'block';
+        const savedCustom = localStorage.getItem(STORAGE_KEY_ACCENT_CUSTOM) || '#00f0ff';
+        applyCustomAccentHex(savedCustom);
+      } else {
+        customRow.style.display = 'none';
+        document.documentElement.removeAttribute('style'); // Clear dynamic custom root overrides
+        document.documentElement.setAttribute('data-accent', accent);
+        localStorage.setItem(STORAGE_KEY_ACCENT, accent);
+        renderHighPrecisionChart();
+      }
+    }
+
+    function applyCustomAccentHex(hex) {
+      if (!hex || !/^#[0-9A-Fa-f]{6}$/.test(hex)) return;
+      document.documentElement.style.setProperty('--accent', hex);
+      document.documentElement.style.setProperty('--accent-muted', hex + '20');
+      document.getElementById('cfg-accent-picker').value = hex;
+      document.getElementById('cfg-accent-hex').value = hex;
+      document.getElementById('cfg-accent').value = 'custom';
+      localStorage.setItem(STORAGE_KEY_ACCENT, 'custom');
+      localStorage.setItem(STORAGE_KEY_ACCENT_CUSTOM, hex);
       renderHighPrecisionChart();
     }
 
@@ -1276,7 +1468,7 @@
     }
 
     // =========================================================================
-    // PWA INSTALLATION PROMPT
+    // PWA INSTALLATION PROTOCOL
     // =========================================================================
     let deferredInstallPrompt = null;
     const installBanner = document.getElementById('pwa-install-banner');
@@ -1297,9 +1489,9 @@
       } else {
         const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
         if (isIOS) {
-          alert("To install on iOS: Tap Share at bottom of Safari, then select 'Add to Home Screen'.");
+          alert("iOS Installation: Tap Share at bottom of Safari, then select 'Add to Home Screen'.");
         } else {
-          alert("To install on Android/Desktop: Tap browser options (three dots) -> 'Install App' or 'Add to Home Screen'.");
+          alert("Chrome/Android: If browser reports app already installed, open browser menu (three dots) -> 'Install OmniMacro' or ensure duplicate tabs on localhost/pages are closed.");
         }
       }
     }
@@ -1315,10 +1507,19 @@
       const savedTheme = localStorage.getItem(STORAGE_KEY_THEME) || 'oled';
       const savedAccent = localStorage.getItem(STORAGE_KEY_ACCENT) || 'cyan';
       document.documentElement.setAttribute('data-theme', savedTheme);
-      document.documentElement.setAttribute('data-accent', savedAccent);
-
       document.getElementById('cfg-theme').value = savedTheme;
-      document.getElementById('cfg-accent').value = savedAccent;
+
+      if (savedAccent === 'custom') {
+        const savedCustom = localStorage.getItem(STORAGE_KEY_ACCENT_CUSTOM) || '#00f0ff';
+        applyCustomAccentHex(savedCustom);
+      } else {
+        document.documentElement.setAttribute('data-accent', savedAccent);
+        document.getElementById('cfg-accent').value = savedAccent;
+      }
+
+      document.getElementById('cfg-fx-matrix').value = String(fxMatrixOpacity);
+      document.getElementById('cfg-fx-dust').value = String(fxDustOpacity);
+
       document.getElementById('cfg-timeline-window').value = chartDays;
       document.getElementById('cfg-radar-radius').value = searchRadius;
       document.getElementById('range-val-label').textContent = `${searchRadius.toLocaleString()}m`;
@@ -1327,6 +1528,10 @@
       document.getElementById('cfg-goal-pro').value = targets.pro;
       document.getElementById('cfg-goal-carb').value = targets.carb;
       document.getElementById('cfg-goal-fat').value = targets.fat;
+
+      // Initialize background FX loop
+      initBackgroundFX();
+      bgAnimFrame = requestAnimationFrame(renderBackgroundFX);
 
       updateTelemetryMatrix();
       startPassiveGeofenceWatcher();
@@ -1337,7 +1542,17 @@
       }
 
       window.addEventListener('resize', () => {
+        initBackgroundFX();
         renderHighPrecisionChart();
+      });
+
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+          if (bgAnimFrame) cancelAnimationFrame(bgAnimFrame);
+        } else {
+          lastFxTimestamp = 0;
+          bgAnimFrame = requestAnimationFrame(renderBackgroundFX);
+        }
       });
 
       if ('serviceWorker' in navigator) {
