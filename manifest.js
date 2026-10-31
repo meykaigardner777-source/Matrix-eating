@@ -1,8 +1,9 @@
 {
+  "id": "omnimacro-core-telemetry-app",
   "name": "OmniMacro System",
   "short_name": "OmniMacro",
   "description": "Precision Macro Telemetry & Restaurant Radar",
-  "start_url": "./",
+  "start_url": "./index.html?mode=standalone_pwa",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
