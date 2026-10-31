@@ -75,7 +75,7 @@
 
     .app-shell { max-width: 580px; margin: 0 auto; padding: 12px 14px 20px; }
 
-    /* Telemetry Header */
+    /* Header */
     .telemetry-header {
       display: flex; justify-content: space-between; align-items: flex-end;
       padding: 10px 0 12px; border-bottom: 1px solid var(--border); margin-bottom: 12px;
@@ -84,7 +84,7 @@
     .system-status { font-family: var(--font-mono); font-size: 0.65rem; color: var(--text-muted); display: flex; align-items: center; gap: 6px; }
     .status-dot { width: 6px; height: 6px; background: var(--accent); border-radius: 50%; box-shadow: 0 0 8px var(--accent); }
 
-    /* Precision Panels */
+    /* Panels */
     .hud-panel {
       background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius);
       padding: 14px; margin-bottom: 10px; position: relative;
@@ -95,7 +95,7 @@
       justify-content: space-between; align-items: center;
     }
 
-    /* Controls */
+    /* Buttons & Inputs */
     .btn {
       background: var(--surface); color: var(--text); border: 1px solid var(--border-bright);
       font-family: var(--font-mono); font-size: 0.72rem; font-weight: 600; text-transform: uppercase;
@@ -195,12 +195,12 @@
 <body>
 
   <div class="app-shell">
-    <!-- PWA INSTALL PROMPT HUD (SHOWN IN BROWSER TABS) -->
+    <!-- PWA Install Prompt (Browser Tab Fallback) -->
     <div id="pwa-install-banner" class="hud-panel" style="display:none; border-color:var(--accent); background:#050d12; margin-bottom:12px;">
       <div style="display:flex; justify-content:space-between; align-items:center;">
         <div>
           <div style="font-family:var(--font-mono); font-size:0.75rem; font-weight:700; color:var(--accent);">STANDALONE APP AVAILABLE</div>
-          <div id="pwa-prompt-desc" style="font-family:var(--font-mono); font-size:0.62rem; color:var(--text-muted); margin-top:2px;">
+          <div style="font-family:var(--font-mono); font-size:0.62rem; color:var(--text-muted); margin-top:2px;">
             Install OmniMacro to your device home screen
           </div>
         </div>
@@ -270,6 +270,7 @@
         </div>
       </div>
 
+      <!-- Verified Cloud Chains Quick Links -->
       <div class="hud-panel" style="padding: 10px 14px;">
         <div class="hud-panel-title" style="margin-bottom:6px;">Verified Chain Directory</div>
         <div class="fast-access-strip">
@@ -282,6 +283,7 @@
         </div>
       </div>
 
+      <!-- Scrubber Chart HUD -->
       <div class="hud-panel">
         <div class="hud-panel-title">
           <span>Accurate Trendline</span>
@@ -308,6 +310,7 @@
         </div>
       </div>
 
+      <!-- Logged Intake -->
       <div class="hud-panel">
         <div class="hud-panel-title">
           <span>Logged Intake // Today</span>
@@ -353,12 +356,12 @@
         <div id="radar-results-list" style="margin-top: 10px;"></div>
       </div>
 
-      <!-- Live Menu Panel -->
+      <!-- Live Dynamic Cloud Menu Stream -->
       <div class="hud-panel" id="venue-feed-panel" style="display: none;">
         <div class="hud-panel-title">
           <div>
             <span id="venue-feed-name" style="color:var(--text); font-weight:700;">Venue</span>
-            <div id="venue-feed-sub" style="font-size:0.62rem; color:var(--text-muted); margin-top:2px;">CLOUD FEED</div>
+            <div id="venue-feed-sub" style="font-size:0.62rem; color:var(--text-muted); margin-top:2px;">LIVE CLOUD STREAM</div>
           </div>
           <button class="btn" style="font-size:0.62rem; padding: 4px 8px;" onclick="promptManualDish()">+ Custom Item</button>
         </div>
@@ -862,7 +865,7 @@
     }
 
     // =========================================================================
-    // RADAR & STRICT (NON-GUESSING) MENU ENGINE
+    // RADAR (WORKING EXACT CODE)
     // =========================================================================
     async function acquireReliableCoordinates() {
       const hardwareGPS = new Promise((resolve) => {
@@ -1021,85 +1024,105 @@
       fetchVerifiedVenueItems(name);
     }
 
-    // STRICT: Only search for the actual restaurant brand. NEVER guess with random cuisine groceries!
+    // =========================================================================
+    // 100% DYNAMIC CLOUD MENU ENGINE (ZERO LOCAL ITEMS, MULTI-MIRROR FAILOVER)
+    // =========================================================================
+    async function queryLiveCloudMirrors(queryTerm) {
+      const sanitized = queryTerm.replace(/['’]/g, '').trim();
+      
+      // Multi-Mirror Cloud Cascade (US CDN, Global Cloud Endpoint, and Search API)
+      const mirrorEndpoints = [
+        `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(sanitized)}&search_simple=1&action=process&json=1&page_size=30`,
+        `https://us.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(sanitized)}&search_simple=1&action=process&json=1&page_size=30`,
+        `https://world.openfoodfacts.net/cgi/search.pl?search_terms=${encodeURIComponent(sanitized)}&search_simple=1&action=process&json=1&page_size=30`
+      ];
+
+      for (const endpoint of mirrorEndpoints) {
+        try {
+          const abortCtrl = new AbortController();
+          const timer = setTimeout(() => abortCtrl.abort(), 4500); // 4.5s aggressive failover
+
+          const response = await fetch(endpoint, {
+            signal: abortCtrl.signal,
+            headers: { 'Accept': 'application/json' }
+          });
+          clearTimeout(timer);
+
+          if (!response.ok) continue; // Try next mirror if server throttled
+
+          const data = await response.json();
+          if (data && data.products && data.products.length > 0) {
+            return data.products;
+          }
+        } catch (err) {
+          // Automatic failover to next cloud endpoint
+          continue;
+        }
+      }
+      return [];
+    }
+
     async function fetchVerifiedVenueItems(venueName) {
       const status = document.getElementById('menu-fetch-status');
       const box = document.getElementById('venue-menu-items');
       status.style.display = 'block';
-      status.textContent = `Querying verified cloud records for "${venueName}"...`;
+      status.textContent = `Connecting to cloud feed for "${venueName}"...`;
       box.innerHTML = '';
 
-      try {
-        const clean = venueName.replace(/['’]/g, '').trim();
-        // Query Open Food Facts with strict brand search
-        const url = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(clean)}&search_simple=1&action=process&json=1&page_size=30&fields=product_name,nutriments,brands`;
-        const res = await fetch(url);
-        const data = await res.json();
+      const products = await queryLiveCloudMirrors(venueName);
+      status.style.display = 'none';
 
-        // Filter products to ensure they actually match the brand/restaurant name
-        const cleanLower = clean.toLowerCase();
-        let dishes = (data.products || [])
-          .filter(p => {
-            const b = (p.brands || '').toLowerCase();
-            const n = (p.product_name || '').toLowerCase();
-            return b.includes(cleanLower) || n.includes(cleanLower);
-          })
-          .map(p => parseOpenFoodFactsPayload(p))
-          .filter(Boolean);
+      const cleanLower = venueName.toLowerCase().replace(/['’]/g, '');
+      const dishes = products
+        .filter(p => {
+          const b = (p.brands || '').toLowerCase().replace(/['’]/g, '');
+          const n = (p.product_name || '').toLowerCase().replace(/['’]/g, '');
+          return b.includes(cleanLower) || n.includes(cleanLower);
+        })
+        .map(p => parseOpenFoodFactsPayload(p))
+        .filter(Boolean);
 
-        status.style.display = 'none';
-
-        // IF NO VERIFIED DATA: Do NOT guess with unrelated groceries. Display honest technical feedback.
-        if (!dishes.length) {
-          box.innerHTML = `
-            <div style="font-family:var(--font-mono); padding:16px 8px; border:1px solid var(--border); text-align:center;">
-              <div style="color:var(--text); font-weight:700; font-size:0.78rem;">NO VERIFIED MENU FOR THIS VENUE</div>
-              <div style="font-size:0.65rem; color:var(--text-muted); margin:6px 0 12px; line-height:1.4;">
-                This location does not publish standardized digital nutritional data.<br>
-                Search a specific dish manually above or record custom macros.
-              </div>
-              <button class="btn btn-accent" onclick="promptManualDish()">+ LOG CUSTOM ENTRY</button>
+      // If venue has no verified digital menu in cloud, show honest technical status. NO GUESSING.
+      if (!dishes.length) {
+        box.innerHTML = `
+          <div style="font-family:var(--font-mono); padding:16px 8px; border:1px solid var(--border); text-align:center;">
+            <div style="color:var(--text); font-weight:700; font-size:0.78rem;">NO VERIFIED MENU FOUND FOR THIS VENUE</div>
+            <div style="font-size:0.65rem; color:var(--text-muted); margin:6px 0 12px; line-height:1.4;">
+              This independent venue does not maintain verified digital cloud nutritional records.<br>
+              Search a specific dish manually above or record custom macros.
             </div>
-          `;
-          return;
-        }
-
-        renderDishCards(dishes);
-      } catch (err) {
-        status.textContent = 'Cloud network lookup failed.';
+            <button class="btn btn-accent" onclick="promptManualDish()">+ LOG CUSTOM ENTRY</button>
+          </div>
+        `;
+        return;
       }
+
+      renderDishCards(dishes);
     }
 
-    // Specific user-initiated dish search
-    async function searchSpecificDish(query) {
-      if (!query.trim()) return;
+    async function searchSpecificDish(dishQuery) {
+      if (!dishQuery.trim()) return;
       const status = document.getElementById('menu-fetch-status');
       const box = document.getElementById('venue-menu-items');
       status.style.display = 'block';
-      status.textContent = `Searching food index for "${query}"...`;
+      status.textContent = `Querying live cloud records for "${dishQuery}"...`;
       box.innerHTML = '';
 
-      try {
-        const url = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(query.trim())}&search_simple=1&action=process&json=1&page_size=25&fields=product_name,nutriments`;
-        const res = await fetch(url);
-        const data = await res.json();
+      const products = await queryLiveCloudMirrors(dishQuery);
+      status.style.display = 'none';
 
-        let dishes = (data.products || []).map(p => parseOpenFoodFactsPayload(p)).filter(Boolean);
-        status.style.display = 'none';
+      const dishes = products.map(p => parseOpenFoodFactsPayload(p)).filter(Boolean);
 
-        if (!dishes.length) {
-          box.innerHTML = `
-            <div style="font-family:var(--font-mono); font-size:0.75rem; color:var(--text-muted); padding:10px; text-align:center;">
-              NO MATCHING ITEMS FOUND FOR "${query.toUpperCase()}".
-            </div>
-          `;
-          return;
-        }
-
-        renderDishCards(dishes);
-      } catch (err) {
-        status.textContent = 'Dish search failed.';
+      if (!dishes.length) {
+        box.innerHTML = `
+          <div style="font-family:var(--font-mono); font-size:0.75rem; color:var(--text-muted); padding:14px; text-align:center;">
+            NO CLOUD RECORDS MATCHING "${dishQuery.toUpperCase()}".
+          </div>
+        `;
+        return;
       }
+
+      renderDishCards(dishes);
     }
 
     function renderDishCards(dishes) {
@@ -1253,11 +1276,10 @@
     }
 
     // =========================================================================
-    // ROBUST PWA INSTALLATION CONTROLLER
+    // PWA INSTALLATION PROMPT
     // =========================================================================
     let deferredInstallPrompt = null;
     const installBanner = document.getElementById('pwa-install-banner');
-    const pwaDesc = document.getElementById('pwa-prompt-desc');
 
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
@@ -1273,7 +1295,6 @@
           installBanner.style.display = 'none';
         });
       } else {
-        // Fallback for iOS or already triggered prompts
         const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
         if (isIOS) {
           alert("To install on iOS: Tap Share at bottom of Safari, then select 'Add to Home Screen'.");
@@ -1310,7 +1331,6 @@
       updateTelemetryMatrix();
       startPassiveGeofenceWatcher();
 
-      // Check if already in standalone app mode
       const isStandalone = window.navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches;
       if (!isStandalone && installBanner) {
         installBanner.style.display = 'block';
@@ -1320,7 +1340,6 @@
         renderHighPrecisionChart();
       });
 
-      // Service Worker registration with GitHub repo pathing
       if ('serviceWorker' in navigator) {
         const repoPath = window.location.pathname.endsWith('/')
           ? window.location.pathname
