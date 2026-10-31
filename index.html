@@ -75,7 +75,7 @@
 
     .app-shell { max-width: 580px; margin: 0 auto; padding: 12px 14px 20px; }
 
-    /* Header */
+    /* Telemetry Header */
     .telemetry-header {
       display: flex; justify-content: space-between; align-items: flex-end;
       padding: 10px 0 12px; border-bottom: 1px solid var(--border); margin-bottom: 12px;
@@ -84,7 +84,7 @@
     .system-status { font-family: var(--font-mono); font-size: 0.65rem; color: var(--text-muted); display: flex; align-items: center; gap: 6px; }
     .status-dot { width: 6px; height: 6px; background: var(--accent); border-radius: 50%; box-shadow: 0 0 8px var(--accent); }
 
-    /* Panels */
+    /* Precision Panels */
     .hud-panel {
       background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius);
       padding: 14px; margin-bottom: 10px; position: relative;
@@ -95,7 +95,7 @@
       justify-content: space-between; align-items: center;
     }
 
-    /* Buttons & Inputs */
+    /* Controls */
     .btn {
       background: var(--surface); color: var(--text); border: 1px solid var(--border-bright);
       font-family: var(--font-mono); font-size: 0.72rem; font-weight: 600; text-transform: uppercase;
@@ -114,7 +114,7 @@
     }
     input:focus, select:focus { border-color: var(--accent); }
 
-    /* Dashboard Metrics */
+    /* Metrics */
     .metric-hero { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
     .metric-value-large { font-family: var(--font-mono); font-size: 2rem; font-weight: 700; letter-spacing: -0.04em; }
     .metric-target-sub { font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-muted); }
@@ -136,7 +136,7 @@
     .macro-cell-val { font-family: var(--font-mono); font-size: 1.05rem; font-weight: 700; }
     .macro-cell-sub { font-family: var(--font-mono); font-size: 0.62rem; color: var(--text-muted); margin-top: 2px; }
 
-    /* High Precision Chart Canvas */
+    /* Chart Node */
     .chart-container-node { position: relative; width: 100%; height: 210px; margin-top: 8px; }
     #interactiveTrendCanvas { width: 100%; height: 100%; display: block; touch-action: none; }
     
@@ -153,7 +153,7 @@
     }
     .chart-filter-chip.active { color: var(--text); border-color: var(--accent); background: var(--accent-muted); }
 
-    /* Fast Access Strip */
+    /* Strip */
     .fast-access-strip { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px; scrollbar-width: none; }
     .fast-access-strip::-webkit-scrollbar { display: none; }
     .chain-chip {
@@ -162,7 +162,6 @@
       white-space: nowrap; cursor: pointer; text-transform: uppercase; color: var(--text-muted);
     }
 
-    /* Rows */
     .telemetry-row {
       display: flex; justify-content: space-between; align-items: center; padding: 9px 10px;
       background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius);
@@ -173,7 +172,6 @@
       border: 1px solid var(--border); border-radius: var(--radius); color: var(--text-muted);
     }
 
-    /* Dock */
     .minimal-dock {
       position: fixed; bottom: 0; left: 0; right: 0;
       height: calc(52px + env(safe-area-inset-bottom));
@@ -197,24 +195,18 @@
 <body>
 
   <div class="app-shell">
-    <!-- PWA INSTALL BANNER (ANDROID / CHROME) -->
+    <!-- PWA INSTALL PROMPT HUD (SHOWN IN BROWSER TABS) -->
     <div id="pwa-install-banner" class="hud-panel" style="display:none; border-color:var(--accent); background:#050d12; margin-bottom:12px;">
       <div style="display:flex; justify-content:space-between; align-items:center;">
         <div>
           <div style="font-family:var(--font-mono); font-size:0.75rem; font-weight:700; color:var(--accent);">STANDALONE APP AVAILABLE</div>
-          <div style="font-family:var(--font-mono); font-size:0.62rem; color:var(--text-muted); margin-top:2px;">Install OmniMacro directly to your device</div>
+          <div id="pwa-prompt-desc" style="font-family:var(--font-mono); font-size:0.62rem; color:var(--text-muted); margin-top:2px;">
+            Install OmniMacro to your device home screen
+          </div>
         </div>
-        <button id="pwa-install-btn" class="btn btn-accent" style="padding:6px 12px; font-size:0.72rem;">
-          INSTALL NOW
+        <button id="pwa-install-btn" class="btn btn-accent" style="padding:6px 12px; font-size:0.72rem;" onclick="triggerInstallAction()">
+          INSTALL
         </button>
-      </div>
-    </div>
-
-    <!-- PWA INSTALL BANNER (IOS SAFARI) -->
-    <div id="ios-install-banner" class="hud-panel" style="display:none; border-color:var(--border-bright); background:#0c0c0e; margin-bottom:12px;">
-      <div style="font-family:var(--font-mono); font-size:0.72rem; font-weight:700; color:var(--text);">INSTALL ON IPHONE:</div>
-      <div style="font-family:var(--font-mono); font-size:0.65rem; color:var(--text-muted); margin-top:4px; line-height:1.4;">
-        Tap the <strong style="color:#fff;">Share</strong> button (<span style="font-size:0.85rem;">⎙</span>) at the bottom of Safari, then choose <strong style="color:var(--accent);">"Add to Home Screen"</strong>.
       </div>
     </div>
 
@@ -226,7 +218,7 @@
       </div>
       <div style="display:flex; gap:6px; align-items:center;">
         <button class="btn" style="padding:3px 8px; font-size:0.62rem;" onclick="simulateGeofenceArrival()">
-          ⚡ Sim Geofence
+          TEST GEOFENCE
         </button>
         <div id="date-readout" style="font-family:var(--font-mono); font-size:0.68rem; color:var(--text-muted);"></div>
       </div>
@@ -238,7 +230,7 @@
     <section id="tab-dashboard" class="view-page active">
       <div class="hud-panel">
         <div class="hud-panel-title">
-          <span>Fuel Matrix</span>
+          <span>Macro Balance</span>
           <span id="calorie-delta-tag" class="tag-mono" style="color:var(--accent);">STANDBY</span>
         </div>
 
@@ -279,18 +271,17 @@
       </div>
 
       <div class="hud-panel" style="padding: 10px 14px;">
-        <div class="hud-panel-title" style="margin-bottom:6px;">Direct Cloud Chains</div>
+        <div class="hud-panel-title" style="margin-bottom:6px;">Verified Chain Directory</div>
         <div class="fast-access-strip">
-          <div class="chain-chip" onclick="openDirectBrand('McDonald\'s', 'burger')">McDonald's</div>
-          <div class="chain-chip" onclick="openDirectBrand('Chick-fil-A', 'chicken')">Chick-fil-A</div>
-          <div class="chain-chip" onclick="openDirectBrand('Chipotle', 'bowl')">Chipotle</div>
-          <div class="chain-chip" onclick="openDirectBrand('Subway', 'sandwich')">Subway</div>
-          <div class="chain-chip" onclick="openDirectBrand('Taco Bell', 'taco')">Taco Bell</div>
-          <div class="chain-chip" onclick="openDirectBrand('Starbucks', 'coffee')">Starbucks</div>
+          <div class="chain-chip" onclick="openDirectBrand('McDonald\'s')">McDonald's</div>
+          <div class="chain-chip" onclick="openDirectBrand('Chick-fil-A')">Chick-fil-A</div>
+          <div class="chain-chip" onclick="openDirectBrand('Chipotle')">Chipotle</div>
+          <div class="chain-chip" onclick="openDirectBrand('Subway')">Subway</div>
+          <div class="chain-chip" onclick="openDirectBrand('Taco Bell')">Taco Bell</div>
+          <div class="chain-chip" onclick="openDirectBrand('Starbucks')">Starbucks</div>
         </div>
       </div>
 
-      <!-- Canvas Chart HUD -->
       <div class="hud-panel">
         <div class="hud-panel-title">
           <span>Accurate Trendline</span>
@@ -317,10 +308,9 @@
         </div>
       </div>
 
-      <!-- Feed List -->
       <div class="hud-panel">
         <div class="hud-panel-title">
-          <span>Intake Feed // Today</span>
+          <span>Logged Intake // Today</span>
           <button class="btn" style="padding: 2px 6px; font-size: 0.62rem;" onclick="clearDayIntake()">Clear</button>
         </div>
         <div id="chrono-log-list"></div>
@@ -333,14 +323,14 @@
     <section id="tab-radar" class="view-page">
       <div class="hud-panel" style="border-color:var(--accent);">
         <div class="hud-panel-title">
-          <span style="color:var(--accent);">Active Geofence Tracker</span>
+          <span style="color:var(--accent);">Proximity Geofence Monitor</span>
           <span id="geofence-status-tag" class="tag-mono" style="color:var(--success);">ACTIVE</span>
         </div>
         <div style="font-family:var(--font-mono); font-size:0.68rem; color:var(--text-muted); line-height:1.4;">
-          OmniMacro continuously tracks your proximity. When you enter within <span style="color:var(--accent);">75m</span> of an eatery, you will receive an automated notification and the menu will load automatically.
+          Automatic background tracker. When entering within 75m of a recognized restaurant, an arrival alert is triggered and the menu loads automatically.
         </div>
         <button class="btn btn-full" style="margin-top:10px;" onclick="requestNotificationAuthorization()">
-          🔔 Enable Push Notifications
+          Authorize Notifications
         </button>
       </div>
 
@@ -351,11 +341,11 @@
         </div>
 
         <button class="btn btn-accent btn-full" onclick="initiateRadarScan()">
-          Scan Geolocation Perimeter
+          Scan Local Perimeter
         </button>
 
         <div style="display: flex; gap: 6px; margin-top: 8px;">
-          <input type="text" id="manual-query-input" placeholder="Or type any city (e.g. Austin, Tokyo)..." onkeydown="if(event.key==='Enter') searchCityDirect()">
+          <input type="text" id="manual-query-input" placeholder="Search city or location..." onkeydown="if(event.key==='Enter') searchCityDirect()">
           <button class="btn" onclick="searchCityDirect()">Search</button>
         </div>
 
@@ -363,17 +353,20 @@
         <div id="radar-results-list" style="margin-top: 10px;"></div>
       </div>
 
-      <!-- Live Dynamic Menu Stream Panel -->
+      <!-- Live Menu Panel -->
       <div class="hud-panel" id="venue-feed-panel" style="display: none;">
         <div class="hud-panel-title">
           <div>
             <span id="venue-feed-name" style="color:var(--text); font-weight:700;">Venue</span>
-            <div id="venue-feed-sub" style="font-size:0.62rem; color:var(--text-muted); margin-top:2px;">DIRECT QUERY</div>
+            <div id="venue-feed-sub" style="font-size:0.62rem; color:var(--text-muted); margin-top:2px;">CLOUD FEED</div>
           </div>
           <button class="btn" style="font-size:0.62rem; padding: 4px 8px;" onclick="promptManualDish()">+ Custom Item</button>
         </div>
 
-        <input type="text" id="venue-filter-input" placeholder="Filter dish name..." onkeydown="if(event.key==='Enter') fetchCloudMenu(this.value)">
+        <div style="display:flex; gap:6px; margin-bottom:8px;">
+          <input type="text" id="venue-filter-input" placeholder="Search specific dish (e.g. Tikka Masala, Burger)..." onkeydown="if(event.key==='Enter') searchSpecificDish(this.value)">
+          <button class="btn" onclick="searchSpecificDish(document.getElementById('venue-filter-input').value)">Find</button>
+        </div>
 
         <div id="menu-fetch-status" style="display:none; font-family:var(--font-mono); font-size:0.7rem; color:var(--accent); margin-top:8px;"></div>
         <div id="venue-menu-items" style="margin-top: 10px; max-height: 420px; overflow-y: auto;"></div>
@@ -393,7 +386,7 @@
           <div><label class="tag-mono">Fats (g)</label><input type="number" id="cfg-goal-fat" onchange="syncCalibration()"></div>
         </div>
 
-        <div class="hud-panel-title" style="margin-top: 14px; margin-bottom: 6px;">Macro Preset Calculations</div>
+        <div class="hud-panel-title" style="margin-top: 14px; margin-bottom: 6px;">Macro Presets</div>
         <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:6px;">
           <button class="btn" onclick="applyMacroPreset('high-protein')">High Pro</button>
           <button class="btn" onclick="applyMacroPreset('balanced')">Balanced</button>
@@ -464,7 +457,7 @@
 
   <script>
     // =========================================================================
-    // STATE & STORAGE CONTROLLER
+    // STATE & STORAGE
     // =========================================================================
     const STORAGE_KEY_GOALS = 'omni_sys_goals_v2';
     const STORAGE_KEY_HISTORY = 'omni_sys_ledger_v2';
@@ -479,9 +472,9 @@
     let searchRadius = parseInt(localStorage.getItem(STORAGE_KEY_RADIUS) || "1500");
     let activeMetric = 'cal';
 
-    // Geofence registry: known nodes within radius
     let knownGeofenceVenues = [];
     let lastNotifiedVenue = null;
+    let currentSelectedVenue = "";
 
     function getTodayString() { return new Date().toISOString().split('T')[0]; }
 
@@ -508,7 +501,7 @@
     }
 
     // =========================================================================
-    // TELEMETRY MATRIX & LOGGING
+    // TELEMETRY MATRIX
     // =========================================================================
     function updateTelemetryMatrix() {
       const today = ensureTodayEntry();
@@ -614,7 +607,7 @@
     }
 
     // =========================================================================
-    // ACCURATE CHART ENGINE & SCRUBBER
+    // ACCURATE CHART
     // =========================================================================
     let cachedChartDataset = [];
 
@@ -710,7 +703,6 @@
       const metricColors = { cal: '#00f0ff', pro: '#38bdf8', carb: '#f59e0b', fat: '#fb7185' };
       const strokeColor = metricColors[activeMetric] || '#00f0ff';
 
-      // Area Fill
       const areaGrad = ctx.createLinearGradient(0, padTop, 0, padTop + plotH);
       areaGrad.addColorStop(0, strokeColor + '25');
       areaGrad.addColorStop(1, strokeColor + '00');
@@ -723,7 +715,6 @@
       ctx.fillStyle = areaGrad;
       ctx.fill();
 
-      // Line
       ctx.beginPath();
       points.forEach((pt, i) => {
         if (i === 0) ctx.moveTo(pt.x, pt.y);
@@ -733,7 +724,6 @@
       ctx.lineWidth = 1.75;
       ctx.stroke();
 
-      // Dates
       ctx.fillStyle = '#52525b';
       ctx.font = `9px var(--font-mono)`;
       ctx.textAlign = 'center';
@@ -744,7 +734,6 @@
         }
       });
 
-      // Scrubber Pinpoint
       if (scrubIndex >= 0 && scrubIndex < points.length) {
         const activePt = points[scrubIndex];
 
@@ -794,7 +783,7 @@
     });
 
     // =========================================================================
-    // PROACTIVE GEOFENCE & NOTIFICATION DISPATCHER
+    // PROXIMITY GEOFENCE
     // =========================================================================
     function calculateDistanceMeters(lat1, lon1, lat2, lon2) {
       const R = 6371e3;
@@ -811,29 +800,27 @@
 
     function requestNotificationAuthorization() {
       if (!('Notification' in window)) {
-        alert("Push notifications not supported on this device/browser.");
+        alert("Notifications not supported in this browser.");
         return;
       }
       Notification.requestPermission().then(permission => {
         if (permission === 'granted') {
-          alert("✅ Geofence notifications active. OmniMacro will ping you when you arrive at a restaurant.");
+          alert("[OK] Proximity notifications authorized.");
         } else {
-          alert("Notifications are disabled in browser settings.");
+          alert("[!] Notification permission not granted.");
         }
       });
     }
 
     function fireGeofenceArrival(venue) {
-      if (lastNotifiedVenue === venue.name) return; // Prevent duplicate loop
+      if (lastNotifiedVenue === venue.name) return;
       lastNotifiedVenue = venue.name;
 
-      // Haptic Vibration
       if ('vibrate' in navigator) navigator.vibrate([120, 60, 120]);
 
-      // System Notification
       const title = `Arrived at ${venue.name}`;
       const options = {
-        body: `Opening live menu & nutritional telemetry now.`,
+        body: `Accessing nutritional stream for venue.`,
         icon: 'icon.svg',
         badge: 'icon.svg'
       };
@@ -846,12 +833,10 @@
         }
       }
 
-      // AUTOMATICALLY SWITCH TAB & OPEN MENU
       switchNav('radar');
-      selectVenueToInspect(venue.name, venue.cuisine || 'Dining');
+      selectVenueToInspect(venue.name);
     }
 
-    // Geofence Position Watcher (Continuous background radar)
     function startPassiveGeofenceWatcher() {
       if (!navigator.geolocation || location.protocol === 'file:') return;
 
@@ -863,7 +848,6 @@
           if (!venue.lat || !venue.lon) continue;
           const dist = calculateDistanceMeters(uLat, uLon, venue.lat, venue.lon);
 
-          // 75-meter geofence perimeter
           if (dist <= 75) {
             fireGeofenceArrival(venue);
             break;
@@ -874,11 +858,11 @@
 
     function simulateGeofenceArrival() {
       requestNotificationAuthorization();
-      fireGeofenceArrival({ name: "McDonald's", cuisine: "burger" });
+      fireGeofenceArrival({ name: "McDonald's" });
     }
 
     // =========================================================================
-    // RADAR & CLOUD MENU ENGINE
+    // RADAR & STRICT (NON-GUESSING) MENU ENGINE
     // =========================================================================
     async function acquireReliableCoordinates() {
       const hardwareGPS = new Promise((resolve) => {
@@ -934,7 +918,7 @@
           }));
 
         const deduped = dedupeVenues(venues);
-        knownGeofenceVenues = deduped; // Register in geofence system
+        knownGeofenceVenues = deduped;
         renderScannedVenues(deduped);
       } catch (err) {
         feedback.textContent = 'Switching to Nominatim fallback...';
@@ -1017,69 +1001,120 @@
           </div>
           <span style="font-family:var(--font-mono); font-size:0.75rem; color:var(--accent);">QUERY →</span>
         `;
-        row.onclick = () => selectVenueToInspect(v.name, v.cuisine);
+        row.onclick = () => selectVenueToInspect(v.name);
         box.appendChild(row);
       });
     }
 
-    function openDirectBrand(brand, keyword) {
+    function openDirectBrand(brand) {
       switchNav('radar');
-      selectVenueToInspect(brand, keyword);
+      selectVenueToInspect(brand);
     }
 
-    function selectVenueToInspect(name, fallbackTerm) {
+    function selectVenueToInspect(name) {
+      currentSelectedVenue = name;
       const panel = document.getElementById('venue-feed-panel');
       panel.style.display = 'block';
       document.getElementById('venue-feed-name').textContent = name;
-      document.getElementById('venue-feed-sub').textContent = `LIVE CLOUD STREAM // ${fallbackTerm.toUpperCase()}`;
+      document.getElementById('venue-feed-sub').textContent = `LIVE CLOUD STREAM`;
       panel.scrollIntoView({ behavior: 'smooth' });
-      fetchCloudMenu(name, fallbackTerm);
+      fetchVerifiedVenueItems(name);
     }
 
-    async function fetchCloudMenu(query, fallback) {
-      if (!query) return;
+    // STRICT: Only search for the actual restaurant brand. NEVER guess with random cuisine groceries!
+    async function fetchVerifiedVenueItems(venueName) {
       const status = document.getElementById('menu-fetch-status');
       const box = document.getElementById('venue-menu-items');
       status.style.display = 'block';
-      status.textContent = `Streaming data for "${query}"...`;
+      status.textContent = `Querying verified cloud records for "${venueName}"...`;
       box.innerHTML = '';
 
       try {
-        const clean = query.replace(/['’]/g, '').trim();
-        const url = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(clean)}&search_simple=1&action=process&json=1&page_size=30&fields=product_name,nutriments`;
+        const clean = venueName.replace(/['’]/g, '').trim();
+        // Query Open Food Facts with strict brand search
+        const url = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(clean)}&search_simple=1&action=process&json=1&page_size=30&fields=product_name,nutriments,brands`;
+        const res = await fetch(url);
+        const data = await res.json();
+
+        // Filter products to ensure they actually match the brand/restaurant name
+        const cleanLower = clean.toLowerCase();
+        let dishes = (data.products || [])
+          .filter(p => {
+            const b = (p.brands || '').toLowerCase();
+            const n = (p.product_name || '').toLowerCase();
+            return b.includes(cleanLower) || n.includes(cleanLower);
+          })
+          .map(p => parseOpenFoodFactsPayload(p))
+          .filter(Boolean);
+
+        status.style.display = 'none';
+
+        // IF NO VERIFIED DATA: Do NOT guess with unrelated groceries. Display honest technical feedback.
+        if (!dishes.length) {
+          box.innerHTML = `
+            <div style="font-family:var(--font-mono); padding:16px 8px; border:1px solid var(--border); text-align:center;">
+              <div style="color:var(--text); font-weight:700; font-size:0.78rem;">NO VERIFIED MENU FOR THIS VENUE</div>
+              <div style="font-size:0.65rem; color:var(--text-muted); margin:6px 0 12px; line-height:1.4;">
+                This location does not publish standardized digital nutritional data.<br>
+                Search a specific dish manually above or record custom macros.
+              </div>
+              <button class="btn btn-accent" onclick="promptManualDish()">+ LOG CUSTOM ENTRY</button>
+            </div>
+          `;
+          return;
+        }
+
+        renderDishCards(dishes);
+      } catch (err) {
+        status.textContent = 'Cloud network lookup failed.';
+      }
+    }
+
+    // Specific user-initiated dish search
+    async function searchSpecificDish(query) {
+      if (!query.trim()) return;
+      const status = document.getElementById('menu-fetch-status');
+      const box = document.getElementById('venue-menu-items');
+      status.style.display = 'block';
+      status.textContent = `Searching food index for "${query}"...`;
+      box.innerHTML = '';
+
+      try {
+        const url = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(query.trim())}&search_simple=1&action=process&json=1&page_size=25&fields=product_name,nutriments`;
         const res = await fetch(url);
         const data = await res.json();
 
         let dishes = (data.products || []).map(p => parseOpenFoodFactsPayload(p)).filter(Boolean);
-
-        if (dishes.length === 0 && fallback) {
-          status.textContent = `Pulling dishes matching "${fallback}"...`;
-          const fbRes = await fetch(`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(fallback)}&search_simple=1&action=process&json=1&page_size=20&fields=product_name,nutriments`);
-          const fbData = await fbRes.json();
-          dishes = (fbData.products || []).map(p => parseOpenFoodFactsPayload(p)).filter(Boolean);
-        }
-
         status.style.display = 'none';
 
         if (!dishes.length) {
-          box.innerHTML = `<div style="font-family:var(--font-mono); font-size:0.75rem; color:var(--text-muted); padding:10px;">NO NUTRITIONAL DATA FOUND. USE "+ CUSTOM ITEM".</div>`;
+          box.innerHTML = `
+            <div style="font-family:var(--font-mono); font-size:0.75rem; color:var(--text-muted); padding:10px; text-align:center;">
+              NO MATCHING ITEMS FOUND FOR "${query.toUpperCase()}".
+            </div>
+          `;
           return;
         }
 
-        box.innerHTML = dishes.map(dish => `
-          <div class="telemetry-row">
-            <div style="flex:1; padding-right:8px;">
-              <div style="font-weight:700;">${dish.name}</div>
-              <div style="font-family:var(--font-mono); font-size:0.65rem; color:var(--text-muted); margin-top:2px;">
-                <span style="color:var(--accent);">${dish.cal} KCAL</span> | P:${dish.pro}g C:${dish.carb}g F:${dish.fat}g
-              </div>
-            </div>
-            <button class="btn btn-accent" style="padding:4px 8px; font-size:0.65rem;" onclick='addIntakeEntry(${JSON.stringify(dish)})'>+ LOG</button>
-          </div>
-        `).join('');
+        renderDishCards(dishes);
       } catch (err) {
-        status.textContent = 'Cloud network lookup failed.';
+        status.textContent = 'Dish search failed.';
       }
+    }
+
+    function renderDishCards(dishes) {
+      const box = document.getElementById('venue-menu-items');
+      box.innerHTML = dishes.map(dish => `
+        <div class="telemetry-row">
+          <div style="flex:1; padding-right:8px;">
+            <div style="font-weight:700;">${dish.name}</div>
+            <div style="font-family:var(--font-mono); font-size:0.65rem; color:var(--text-muted); margin-top:2px;">
+              <span style="color:var(--accent);">${dish.cal} KCAL</span> | P:${dish.pro}g C:${dish.carb}g F:${dish.fat}g
+            </div>
+          </div>
+          <button class="btn btn-accent" style="padding:4px 8px; font-size:0.65rem;" onclick='addIntakeEntry(${JSON.stringify(dish)})'>+ LOG</button>
+        </div>
+      `).join('');
     }
 
     function parseOpenFoodFactsPayload(item) {
@@ -1182,9 +1217,9 @@
           historyLedger = JSON.parse(e.target.result);
           localStorage.setItem(STORAGE_KEY_HISTORY, JSON.stringify(historyLedger));
           updateTelemetryMatrix();
-          alert("Ledger imported.");
+          alert("[OK] Ledger imported successfully.");
         } catch (err) {
-          alert("Invalid JSON.");
+          alert("[!] Invalid JSON structure.");
         }
       };
       reader.readAsText(file);
@@ -1203,7 +1238,7 @@
           pro: Math.round(140 + (Math.random() * 35)),
           carb: Math.round(190 + (Math.random() * 50)),
           fat: Math.round(55 + (Math.random() * 20)),
-          logs: [{ name: "Simulated Intake", cal: 2100, pro: 155, carb: 200, fat: 65 }]
+          logs: [{ name: "Simulated Record", cal: 2100, pro: 155, carb: 200, fat: 65 }]
         };
       }
       localStorage.setItem(STORAGE_KEY_HISTORY, JSON.stringify(historyLedger));
@@ -1218,12 +1253,11 @@
     }
 
     // =========================================================================
-    // INITIALIZATION & PWA PROMPT CONTROLLER
+    // ROBUST PWA INSTALLATION CONTROLLER
     // =========================================================================
     let deferredInstallPrompt = null;
     const installBanner = document.getElementById('pwa-install-banner');
-    const installBtn = document.getElementById('pwa-install-btn');
-    const iosBanner = document.getElementById('ios-install-banner');
+    const pwaDesc = document.getElementById('pwa-prompt-desc');
 
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
@@ -1231,27 +1265,27 @@
       if (installBanner) installBanner.style.display = 'block';
     });
 
-    if (installBtn) {
-      installBtn.addEventListener('click', async () => {
-        if (!deferredInstallPrompt) return;
+    function triggerInstallAction() {
+      if (deferredInstallPrompt) {
         deferredInstallPrompt.prompt();
-        const { outcome } = await deferredInstallPrompt.userChoice;
-        deferredInstallPrompt = null;
-        installBanner.style.display = 'none';
-      });
+        deferredInstallPrompt.userChoice.then(() => {
+          deferredInstallPrompt = null;
+          installBanner.style.display = 'none';
+        });
+      } else {
+        // Fallback for iOS or already triggered prompts
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+        if (isIOS) {
+          alert("To install on iOS: Tap Share at bottom of Safari, then select 'Add to Home Screen'.");
+        } else {
+          alert("To install on Android/Desktop: Tap browser options (three dots) -> 'Install App' or 'Add to Home Screen'.");
+        }
+      }
     }
 
-    window.addEventListener('appinstalled', () => {
-      if (installBanner) installBanner.style.display = 'none';
-      if (iosBanner) iosBanner.style.display = 'none';
-    });
-
-    const isIOSDevice = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-    const isAlreadyStandalone = window.navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches;
-    if (isIOSDevice && !isAlreadyStandalone) {
-      if (iosBanner) iosBanner.style.display = 'block';
-    }
-
+    // =========================================================================
+    // SYSTEM INITIALIZATION
+    // =========================================================================
     window.addEventListener('DOMContentLoaded', () => {
       document.getElementById('date-readout').textContent = new Date().toLocaleDateString('en-US', {
         weekday: 'short', month: 'short', day: 'numeric'
@@ -1276,11 +1310,17 @@
       updateTelemetryMatrix();
       startPassiveGeofenceWatcher();
 
+      // Check if already in standalone app mode
+      const isStandalone = window.navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches;
+      if (!isStandalone && installBanner) {
+        installBanner.style.display = 'block';
+      }
+
       window.addEventListener('resize', () => {
         renderHighPrecisionChart();
       });
 
-      // Service Worker Registration
+      // Service Worker registration with GitHub repo pathing
       if ('serviceWorker' in navigator) {
         const repoPath = window.location.pathname.endsWith('/')
           ? window.location.pathname
