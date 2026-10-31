@@ -1,4 +1,4 @@
-const CACHE_NAME = 'omnimacro-core-v2';
+const CACHE_NAME = 'omnimacro-core-v3';
 const STATIC_ASSETS = [
   './',
   './index.html',
@@ -41,12 +41,10 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Local assets served from cache
+  // Local assets served from cache with ignoreSearch: true
   event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
+    caches.match(event.request, { ignoreSearch: true }).then((cachedResponse) => {
       return cachedResponse || fetch(event.request);
     })
   );
-}); 
-
-
+});
