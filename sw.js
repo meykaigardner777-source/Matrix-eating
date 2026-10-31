@@ -1,4 +1,4 @@
-const CACHE_NAME = 'omnimacro-core-v3';
+const CACHE_NAME = 'omnimacro-core-v4';
 const STATIC_ASSETS = [
   './',
   './index.html',
@@ -41,10 +41,28 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Local assets served from cache with ignoreSearch: true
+  // Local assets served from cache with query parameter immunity
   event.respondWith(
     caches.match(event.request, { ignoreSearch: true }).then((cachedResponse) => {
       return cachedResponse || fetch(event.request);
+    })
+  );
+});
+
+// Notification Click Handler: Focus or Launch App from Lockscreen
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      for (const client of clientList) {
+        if ('focus' in client) {
+          return client.focus();
+        }
+      }
+      if (clients.openWindow) {
+        return clients.openWindow('./index.html?mode=standalone_pwa');
+      }
     })
   );
 });
