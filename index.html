@@ -9,11 +9,11 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="OmniMacro">
-  <link rel="apple-touch-icon" href="icon.svg">
+  <link rel="apple-touch-icon" href="./icon.svg">
 
-  <!-- PWA Manifest & Favicon -->
-  <link rel="manifest" href="manifest.json">
-  <link rel="icon" type="image/svg+xml" href="icon.svg">
+  <!-- PWA Manifest & Favicon (Explicit Root-Relative Link) -->
+  <link rel="manifest" href="./manifest.json">
+  <link rel="icon" type="image/svg+xml" href="./icon.svg">
 
   <title>OmniMacro — Telemetry</title>
 
@@ -77,7 +77,7 @@
       position: relative;
     }
 
-    /* Fixed OLED Canvas for HUD Background FX */
+    /* Fixed OLED Canvas for Background Matrix & Dust */
     #hud-bg-canvas {
       position: fixed;
       top: 0;
@@ -576,13 +576,11 @@
     const bgCtx = bgCanvas.getContext('2d');
     let bgAnimFrame = null;
 
-    // Japanese Katakana glyph pool
     const KATAKANA_GLYPHS = "ｦｱｳｴｵｶｷｹｺｻｼｽｾｿﾀﾂﾃﾅﾆﾇﾈﾊﾋﾎﾏﾐﾑﾒﾓﾔﾕﾗﾘﾜ1234567890:.-=+*";
     const matrixFontSize = 13;
     let matrixColumns = 0;
     let matrixDrops = [];
 
-    // Drifting dust particles
     const DUST_COUNT = 32;
     let dustParticles = [];
 
@@ -624,7 +622,6 @@
 
       bgCtx.clearRect(0, 0, w, h);
 
-      // 1. Minimal Japanese Matrix Stream
       if (fxMatrixOpacity > 0 && delta > 45) {
         lastFxTimestamp = timestamp;
         bgCtx.font = `${matrixFontSize}px var(--font-mono)`;
@@ -645,7 +642,6 @@
         }
       }
 
-      // 2. Drifting Dust Simulation
       if (fxDustOpacity > 0) {
         for (let i = 0; i < dustParticles.length; i++) {
           const p = dustParticles[i];
@@ -998,8 +994,8 @@
       const title = `Arrived at ${venue.name}`;
       const options = {
         body: `Accessing nutritional stream for venue.`,
-        icon: 'icon.svg',
-        badge: 'icon.svg'
+        icon: './icon.svg',
+        badge: './icon.svg'
       };
 
       if ('Notification' in window && Notification.permission === 'granted') {
@@ -1384,7 +1380,7 @@
         applyCustomAccentHex(savedCustom);
       } else {
         customRow.style.display = 'none';
-        document.documentElement.removeAttribute('style'); // Clear dynamic custom root overrides
+        document.documentElement.removeAttribute('style');
         document.documentElement.setAttribute('data-accent', accent);
         localStorage.setItem(STORAGE_KEY_ACCENT, accent);
         renderHighPrecisionChart();
@@ -1529,7 +1525,6 @@
       document.getElementById('cfg-goal-carb').value = targets.carb;
       document.getElementById('cfg-goal-fat').value = targets.fat;
 
-      // Initialize background FX loop
       initBackgroundFX();
       bgAnimFrame = requestAnimationFrame(renderBackgroundFX);
 
