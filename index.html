@@ -219,7 +219,7 @@
 </head>
 <body>
 
-  <!-- Fullscreen Minimal OLED Background FX (Japanese Matrix & White Dust) -->
+  <!-- Fullscreen Minimal OLED Background FX (Japanese Katakana & Drifting White Dust) -->
   <canvas id="hud-bg-canvas"></canvas>
 
   <div class="app-shell">
@@ -356,9 +356,14 @@
         <div style="font-family:var(--font-mono); font-size:0.68rem; color:var(--text-muted); line-height:1.4;">
           Automatic background tracker. When entering within 75m of a recognized restaurant, an arrival alert is triggered and the menu loads automatically.
         </div>
-        <button class="btn btn-full" style="margin-top:10px;" onclick="requestNotificationAuthorization()">
-          Authorize Notifications
-        </button>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:6px; margin-top:10px;">
+          <button class="btn" onclick="requestNotificationAuthorization()">
+            Authorize Alerts
+          </button>
+          <button class="btn btn-accent" onclick="testDelayedLockscreenAlert()">
+            Lockscreen Test (5s)
+          </button>
+        </div>
       </div>
 
       <div class="hud-panel">
@@ -737,7 +742,7 @@
               ${item.cal} KCAL | P:${item.pro}g C:${item.carb}g F:${item.fat}g
             </div>
           </div>
-          <button style="background:none; border:none; color:var(--text-dim); cursor:pointer; font-family:var(--font-mono); font-size:0.9rem;" onclick="removeIntakeItem(${idx})">✕</button>
+          <button style="background:none; border:none; color:var(--text-dim); cursor:pointer; font-family:var(--font-mono); font-size:0.75rem; padding:4px 8px;" onclick="removeIntakeItem(${idx})">[X]</button>
         </div>
       `).reverse().join('');
     }
@@ -956,7 +961,7 @@
     });
 
     // =========================================================================
-    // PROXIMITY GEOFENCE
+    // PROXIMITY GEOFENCE & LOCKSCREEN NOTIFICATION ENGINE
     // =========================================================================
     function calculateDistanceMeters(lat1, lon1, lat2, lon2) {
       const R = 6371e3;
@@ -971,43 +976,83 @@
       return R * c;
     }
 
-    function requestNotificationAuthorization() {
+    async function requestNotificationAuthorization() {
       if (!('Notification' in window)) {
-        alert("[!] Notifications not supported in this client.");
+        alert("[!] Web Notifications are not supported in this client.");
         return;
       }
-      Notification.requestPermission().then(permission => {
+
+      try {
+        const permission = await Notification.requestPermission();
+        syncNotificationStatusTag(permission);
+
         if (permission === 'granted') {
-          alert("[OK] Proximity notifications authorized.");
-        } else {
-          alert("[!] Notification permission not granted.");
+          alert("[OK] Notifications authorized. Lockscreen telemetry active.");
+        } else if (permission === 'denied') {
+          alert("[!] Blocked by browser. To enable: Tap the lock icon in the Chrome URL bar -> Permissions -> Notifications -> Allow.");
         }
-      });
+      } catch (err) {
+        alert("[!] Authorization failure: " + err.message);
+      }
     }
 
-    function fireGeofenceArrival(venue) {
+    function syncNotificationStatusTag(status) {
+      const tag = document.getElementById('geofence-status-tag');
+      if (!tag) return;
+      const perm = status || (('Notification' in window) ? Notification.permission : 'denied');
+      if (perm === 'granted') {
+        tag.textContent = 'AUTHORIZED';
+        tag.style.color = 'var(--success)';
+      } else if (perm === 'denied') {
+        tag.textContent = 'BLOCKED';
+        tag.style.color = 'var(--danger)';
+      } else {
+        tag.textContent = 'PENDING';
+        tag.style.color = 'var(--carb)';
+      }
+    }
+
+    async function fireGeofenceArrival(venue) {
       if (lastNotifiedVenue === venue.name) return;
       lastNotifiedVenue = venue.name;
 
-      if ('vibrate' in navigator) navigator.vibrate([120, 60, 120]);
+      if ('vibrate' in navigator) navigator.vibrate([200, 100, 200, 100, 200]);
 
-      const title = `Arrived at ${venue.name}`;
+      const title = `Dining Alert: ${venue.name}`;
       const options = {
-        body: `Accessing nutritional stream for venue.`,
+        body: `Within 75m perimeter. Streaming live menu telemetry.`,
         icon: './icon.svg',
-        badge: './icon.svg'
+        badge: './icon.svg',
+        tag: 'geofence-arrival-' + venue.name.toLowerCase().replace(/[^a-z0-9]/g, ''),
+        renotify: true,
+        requireInteraction: true,
+        vibrate: [250, 100, 250, 100, 250],
+        silent: false
       };
 
-      if ('Notification' in window && Notification.permission === 'granted') {
-        if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-          navigator.serviceWorker.ready.then(reg => reg.showNotification(title, options));
-        } else {
-          new Notification(title, options);
+      if ('serviceWorker' in navigator) {
+        try {
+          const reg = await navigator.serviceWorker.ready;
+          await reg.showNotification(title, options);
+        } catch (err) {
+          console.warn("[SYS] SW notification dispatch fallback:", err);
         }
       }
 
       switchNav('radar');
       selectVenueToInspect(venue.name);
+    }
+
+    function testDelayedLockscreenAlert() {
+      if (!('Notification' in window) || Notification.permission !== 'granted') {
+        alert("[!] Authorize alerts first.");
+        return;
+      }
+
+      alert("[SYS] Lock your device screen now. Lockscreen alert dispatches in 5 seconds.");
+      setTimeout(() => {
+        fireGeofenceArrival({ name: "McDonald's" });
+      }, 5000);
     }
 
     function startPassiveGeofenceWatcher() {
@@ -1030,7 +1075,9 @@
     }
 
     function simulateGeofenceArrival() {
-      requestNotificationAuthorization();
+      if (Notification.permission !== 'granted') {
+        requestNotificationAuthorization();
+      }
       fireGeofenceArrival({ name: "McDonald's" });
     }
 
@@ -1530,6 +1577,7 @@
 
       updateTelemetryMatrix();
       startPassiveGeofenceWatcher();
+      syncNotificationStatusTag();
 
       const isStandalone = window.navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches;
       if (!isStandalone && installBanner) {
